@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o endpoint de saúde, o banco SQLite, a sessão simulada por cookie, a interface inicial com Material UI e a infraestrutura de testes unitários foram configurados. A listagem de salas, as reservas e a CI serão acrescentadas nas próximas etapas.
+A base Next.js, as verificações de lint e formatação, o endpoint de saúde, o banco SQLite, a sessão simulada por cookie, a interface inicial com Material UI, os testes unitários e o workflow de CI foram configurados. A listagem de salas e as reservas serão acrescentadas nas próximas etapas. A CI ainda precisa ser observada em um PR e a proteção das branches configurada no GitHub.
 
 ## Escopo previsto
 
@@ -33,6 +33,12 @@ Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `np
 
 Os testes unitários de componentes e código executado no navegador ficam em `tests/unit/client`; regras e módulos do servidor ficam em `tests/unit/server`. Os cenários são documentados em `tests/scenarios`, e os helpers reutilizáveis ficam em `tests/helpers`. O Jest usa ambiente Node por padrão e `jsdom` apenas nos testes de componentes. Os testes permanecem isolados e podem ser executados em paralelo pelo Jest, permitindo que a suíte cresça sem impor execução sequencial. O setup cobre autorização da sessão e troca de usuário na interface com repository, cookie e HTTP simulados, sem acessar SQLite. `npm run test:watch` executa os testes durante o desenvolvimento e `npm run test:coverage` gera o relatório de cobertura. As regras dos cards receberão testes próprios ao serem implementadas.
 
+## Integração contínua
+
+O workflow `.github/workflows/ci.yml` roda em pull requests para `develop` e `main`, com permissão apenas de leitura no repositório. Usa Node 24 conforme `.nvmrc`, cache npm e `npm ci`. Prepara migrations e seed em um SQLite temporário com `NODE_ENV=test`, depois executa formatação, lint, typecheck, `npm test` e build. O template de PR pede o quê mudou, por quê e como testar.
+
+Após a primeira execução verde no PR de setup, configurar uma [ruleset de branches no GitHub](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository) para `develop` e `main` com exigência de pull request e do status `Verify` da CI antes do merge. A configuração remota e a execução do workflow ainda estão pendentes; os comandos locais validam apenas o conteúdo deste checkout.
+
 ## Decisões técnicas
 
 | Escolha                                                             | Motivo                                                                                                                                           |
@@ -44,7 +50,7 @@ Os testes unitários de componentes e código executado no navegador ficam em `t
 | Material UI                                                         | Acelera a construção de formulários e componentes responsivos.                                                                                   |
 | Axios no cliente                                                    | Centraliza as chamadas HTTP das interações feitas no navegador.                                                                                  |
 | Jest e React Testing Library                                        | Testes unitários das regras e dos componentes interativos, com dependências externas controladas por mocks.                                      |
-| ESLint 9 com regras Next.js Core Web Vitals/TypeScript e Prettier 3 | Detectam problemas de código e mantêm formatação consistente; o CI usará os mesmos scripts quando for configurado.                               |
+| ESLint 9 com regras Next.js Core Web Vitals/TypeScript e Prettier 3 | Detectam problemas de código e mantêm formatação consistente; o CI executa os mesmos scripts usados localmente.                                  |
 
 ## Direção visual
 
@@ -88,6 +94,6 @@ Reservas têm usuário, sala, início e fim; a duração máxima por sala será 
 
 ## Limites e pendências
 
-Swagger/OpenAPI, Docker e exclusão de salas serão avaliados depois dos requisitos obrigatórios. Ao atingir aproximadamente oito horas de implementação, o trabalho será interrompido e o que faltar será registrado aqui.
+Swagger/OpenAPI, Docker, exclusão de salas e o desenho detalhado da arquitetura AWS serão avaliados depois dos requisitos obrigatórios. A proposta AWS será escrita após a aplicação estar completa para considerar com precisão execução, banco, arquivos estáticos, possível uso de S3, segredos e separação dos ambientes. Ao atingir aproximadamente oito horas de implementação, o trabalho será interrompido e o que faltar será registrado aqui.
 
 `npm audit --omit=dev` aponta duas ocorrências moderadas na dependência transitiva `uuid` usada pelo Sequelize v6. Os IDs deste projeto são inteiros; a versão estável escolhida será mantida nesta etapa porque não há correção automática segura. Reavaliar a dependência antes de produção.

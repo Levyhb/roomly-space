@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js e as verificações de lint e formatação foram configuradas. As funcionalidades de salas e reservas, o banco com seed, os testes e a CI serão acrescentados nas próximas etapas.
+A base Next.js, as verificações de lint e formatação e um endpoint de saúde foram configurados. As funcionalidades de salas e reservas, o banco com seed, os testes e a CI serão acrescentados nas próximas etapas.
 
 ## Escopo previsto
 
@@ -24,7 +24,7 @@ npm ci
 npm run dev
 ```
 
-Acesse `http://localhost:3000`. Neste estágio, a página mostra apenas que o sistema está em construção. O banco e o seed serão adicionados no setup; a versão final deverá subir com dados de exemplo em até três comandos.
+Acesse `http://localhost:3000`. Neste estágio, a página mostra apenas que o sistema está em construção. `GET /api/health` responde `200` com `{"status":"ok"}` e indica apenas que o servidor HTTP está ativo; ainda não verifica o banco. O banco e o seed serão adicionados no setup; a versão final deverá subir com dados de exemplo em até três comandos.
 
 Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `npm run typecheck` e `npm run build`. Os comandos `npm run lint:fix` e `npm run format` aplicam correções locais antes de uma nova verificação.
 
@@ -41,7 +41,15 @@ Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `np
 | Jest e React Testing Library                                        | Testes unitários das regras e dos componentes interativos, com dependências externas controladas por mocks.                                      |
 | ESLint 9 com regras Next.js Core Web Vitals/TypeScript e Prettier 3 | Detectam problemas de código e mantêm formatação consistente; o CI usará os mesmos scripts quando for configurado.                               |
 
-Os Route Handlers do Next.js farão a entrada HTTP. Controllers tratarão requisições e respostas, services aplicarão regras e repositories acessarão os dados. A autorização será verificada no servidor: o seletor de usuário define uma sessão simulada, e a role é consultada no banco. O fuso das regras de reserva será `America/Sao_Paulo`.
+## Organização do código
+
+- `src/app`: páginas e Route Handlers do App Router; cada handler expõe os métodos HTTP e delega ao controller.
+- `src/server/controllers`: entrada HTTP, validação dos dados recebidos e construção da resposta. O controller de saúde é o primeiro exemplo.
+- `src/server/services` e `src/server/repositories`: serão criados quando houver regras de negócio e consultas ao banco; services aplicarão regras e repositories isolarão o acesso aos dados.
+- `src/server/db`, `src/server/auth` e `src/server/schemas`: conexão e models, identificação/autorização do usuário e schemas de validação, respectivamente, nas próximas etapas do setup.
+- `src/components`, `src/services/api` e `src/types`: componentes da interface, cliente HTTP para interações no navegador e tipos compartilhados, quando houver uso concreto.
+
+A autorização será verificada no servidor: o seletor de usuário definirá uma sessão simulada, e a role será consultada no banco. O fuso das regras de reserva será `America/Sao_Paulo`.
 
 ## Fluxo de entrega
 

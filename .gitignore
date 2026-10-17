@@ -4,8 +4,11 @@ notes/
 # Arquivos gerados e configuração local
 node_modules/
 .next/
+*.tsbuildinfo
 coverage/
 .env*
 !.env.example
 *.sqlite
 *.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm

@@ -14,8 +14,6 @@ jobs:
     name: Verify
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      DB_STORAGE_TEST: ${{ runner.temp }}/roomly-test.sqlite
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -33,6 +31,7 @@ jobs:
         run: npm run db:setup
         env:
           NODE_ENV: test
+          DB_STORAGE_TEST: ${{ runner.temp }}/roomly-test.sqlite
 
       - name: Check formatting
         run: npm run format:check

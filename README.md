@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o endpoint de saúde, o banco SQLite, a sessão simulada por cookie e a interface inicial com Material UI foram configurados. A listagem de salas, as reservas, os testes e a CI serão acrescentados nas próximas etapas.
+A base Next.js, as verificações de lint e formatação, o endpoint de saúde, o banco SQLite, a sessão simulada por cookie, a interface inicial com Material UI e a infraestrutura de testes unitários foram configurados. A listagem de salas, as reservas e a CI serão acrescentadas nas próximas etapas.
 
 ## Escopo previsto
 
@@ -29,7 +29,9 @@ Acesse `http://localhost:3000`. A página inicial contém somente a estrutura vi
 
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 
-Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `npm run typecheck` e `npm run build`. Os comandos `npm run lint:fix` e `npm run format` aplicam correções locais antes de uma nova verificação.
+Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test` e `npm run build`. Os comandos `npm run lint:fix` e `npm run format` aplicam correções locais antes de uma nova verificação.
+
+Os testes unitários de componentes e código executado no navegador ficam em `tests/unit/client`; regras e módulos do servidor ficam em `tests/unit/server`. Os cenários são documentados em `tests/scenarios`, e os helpers reutilizáveis ficam em `tests/helpers`. O Jest usa ambiente Node por padrão e `jsdom` apenas nos testes de componentes. Os testes permanecem isolados e podem ser executados em paralelo pelo Jest, permitindo que a suíte cresça sem impor execução sequencial. O setup cobre autorização da sessão e troca de usuário na interface com repository, cookie e HTTP simulados, sem acessar SQLite. `npm run test:watch` executa os testes durante o desenvolvimento e `npm run test:coverage` gera o relatório de cobertura. As regras dos cards receberão testes próprios ao serem implementadas.
 
 ## Decisões técnicas
 

@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o endpoint de saúde e o banco SQLite com migrations e seed foram configurados. As funcionalidades de salas e reservas, os testes e a CI serão acrescentados nas próximas etapas.
+A base Next.js, as verificações de lint e formatação, o endpoint de saúde, o banco SQLite e a sessão simulada por cookie foram configurados. As funcionalidades de salas e reservas, a interface de seleção de usuário, os testes e a CI serão acrescentados nas próximas etapas.
 
 ## Escopo previsto
 
@@ -48,11 +48,21 @@ Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `np
 
 - `src/app`: páginas e Route Handlers do App Router; cada handler expõe os métodos HTTP e delega ao controller.
 - `src/server/controllers`: entrada HTTP, validação dos dados recebidos e construção da resposta. O controller de saúde é o primeiro exemplo.
-- `src/server/services` e `src/server/repositories`: serão criados quando houver regras de negócio e consultas ao banco; services aplicarão regras e repositories isolarão o acesso aos dados.
-- `src/server/db`: conexão e models tipados do Sequelize. `src/server/auth` e `src/server/schemas` serão criados para identificação/autorização e validação nas próximas etapas.
-- `src/components`, `src/services/api` e `src/types`: componentes da interface, cliente HTTP para interações no navegador e tipos compartilhados, quando houver uso concreto.
+- `src/server/repositories`: isola consultas ao banco; `src/server/services` será criado quando houver regras de negócio.
+- `src/server/db`, `src/server/auth`, `src/server/schemas` e `src/server/http`: models/conexão, identificação e autorização, validação Zod e respostas de erro.
+- `src/services/api`: instância Axios para Client Components. `src/components` e `src/types` serão criados quando houver componentes e tipos compartilhados.
 
-A autorização será verificada no servidor: o seletor de usuário definirá uma sessão simulada, e a role será consultada no banco. O fuso das regras de reserva será `America/Sao_Paulo`.
+A autorização é verificada no servidor: o seletor de usuário definirá uma sessão simulada, e a role é consultada no banco. O fuso das regras de reserva será `America/Sao_Paulo`. O Next carrega Sequelize e SQLite diretamente no runtime Node por `serverExternalPackages`, pois o empacotamento padrão do Turbopack tenta resolver drivers de outros bancos que o projeto não usa.
+
+O helper `validate` recebe dados de body, query ou parâmetros de rota e aplica o schema Zod correspondente. Nesta etapa, o corpo de `POST /api/session` é o primeiro uso; os filtros e IDs dos cards usarão o mesmo helper.
+
+## Sessão simulada
+
+- `POST /api/session` recebe JSON `{"userId":1}`, valida o corpo com Zod e grava o ID selecionado em cookie `HttpOnly`, `SameSite=Lax` e `Secure` em produção. A role não vem do navegador.
+- `GET /api/session` retorna `{ "user": { "id", "name", "role" } }` consultando o usuário no banco; sem cookie ou com ID inexistente, retorna `401`.
+- `DELETE /api/session` limpa o cookie e retorna `204`. Payload inválido recebe `400`; tipo de conteúdo diferente de JSON recebe `415`. O helper `requireAdmin` produz `403` quando um usuário sem role `ADMIN` tenta acessar uma rota protegida.
+
+Este cookie guarda apenas o ID escolhido e representa uma **autenticação simulada** para o desafio, não uma prova de identidade. Mesmo com `HttpOnly`, alguém pode selecionar outro usuário ou manipular o próprio cookie. Os handlers protegidos dos cards usarão `requireUser` ou `requireAdmin` no servidor e consultarão a role no banco. Uma implantação real exigiria autenticação e sessão assinada.
 
 ## Dados de exemplo e modelagem
 

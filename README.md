@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o endpoint de saúde, o banco SQLite e a sessão simulada por cookie foram configurados. As funcionalidades de salas e reservas, a interface de seleção de usuário, os testes e a CI serão acrescentados nas próximas etapas.
+A base Next.js, as verificações de lint e formatação, o endpoint de saúde, o banco SQLite, a sessão simulada por cookie e a interface inicial com Material UI foram configurados. A listagem de salas, as reservas, os testes e a CI serão acrescentados nas próximas etapas.
 
 ## Escopo previsto
 
@@ -25,7 +25,7 @@ npm run db:setup
 npm run dev
 ```
 
-Acesse `http://localhost:3000`. Neste estágio, a página mostra apenas que o sistema está em construção. `GET /api/health` responde `200` com `{"status":"ok"}` e indica apenas que o servidor HTTP está ativo; ainda não verifica o banco. `db:setup` executa `db:migrate` e, somente se a migration terminar sem erro, executa `db:seed`.
+Acesse `http://localhost:3000`. A página inicial contém somente a estrutura visual compartilhada e permite escolher um usuário do seed; a listagem, os filtros e os endpoints de salas entram na SALA-1. `GET /api/health` responde `200` com `{"status":"ok"}` e indica apenas que o servidor HTTP está ativo; ainda não verifica o banco. `db:setup` executa `db:migrate` e, somente se a migration terminar sem erro, executa `db:seed`.
 
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 
@@ -44,13 +44,19 @@ Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `np
 | Jest e React Testing Library                                        | Testes unitários das regras e dos componentes interativos, com dependências externas controladas por mocks.                                      |
 | ESLint 9 com regras Next.js Core Web Vitals/TypeScript e Prettier 3 | Detectam problemas de código e mantêm formatação consistente; o CI usará os mesmos scripts quando for configurado.                               |
 
+## Direção visual
+
+Referência para as telas funcionais: cabeçalho claro, roxo para identidade e navegação, laranja para ações principais e cartões para as salas. Os tokens de cor estão em `src/app/globals.css`; o tema do Material UI reproduz essa paleta. `AppRouterCacheProvider` integra o MUI ao App Router e evita problemas de renderização dos estilos no servidor. A marca geométrica representa uma porta de sala e foi desenhada em SVG para continuar nítida em diferentes tamanhos.
+
+Nesta etapa, a página mantém apenas o shell compartilhado, a identidade visual, o loading genérico e o seletor de usuário com estados de progresso e erro. Na SALA-1 entram a navegação, os cartões com dados reais e os filtros. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
+
 ## Organização do código
 
 - `src/app`: páginas e Route Handlers do App Router; cada handler expõe os métodos HTTP e delega ao controller.
 - `src/server/controllers`: entrada HTTP, validação dos dados recebidos e construção da resposta. O controller de saúde é o primeiro exemplo.
 - `src/server/repositories`: isola consultas ao banco; `src/server/services` será criado quando houver regras de negócio.
 - `src/server/db`, `src/server/auth`, `src/server/schemas` e `src/server/http`: models/conexão, identificação e autorização, validação Zod e respostas de erro.
-- `src/services/api`: instância Axios para Client Components. `src/components` e `src/types` serão criados quando houver componentes e tipos compartilhados.
+- `src/services/api`: instância Axios para Client Components. `src/components` contém o tema, a marca e a interface inicial; `src/types` será criado quando houver tipos compartilhados com uso concreto.
 
 A autorização é verificada no servidor: o seletor de usuário definirá uma sessão simulada, e a role é consultada no banco. O fuso das regras de reserva será `America/Sao_Paulo`. O Next carrega Sequelize e SQLite diretamente no runtime Node por `serverExternalPackages`, pois o empacotamento padrão do Turbopack tenta resolver drivers de outros bancos que o projeto não usa.
 
@@ -63,6 +69,8 @@ O helper `validate` recebe dados de body, query ou parâmetros de rota e aplica 
 - `DELETE /api/session` limpa o cookie e retorna `204`. Payload inválido recebe `400`; tipo de conteúdo diferente de JSON recebe `415`. O helper `requireAdmin` produz `403` quando um usuário sem role `ADMIN` tenta acessar uma rota protegida.
 
 Este cookie guarda apenas o ID escolhido e representa uma **autenticação simulada** para o desafio, não uma prova de identidade. Mesmo com `HttpOnly`, alguém pode selecionar outro usuário ou manipular o próprio cookie. Os handlers protegidos dos cards usarão `requireUser` ou `requireAdmin` no servidor e consultarão a role no banco. Uma implantação real exigiria autenticação e sessão assinada.
+
+Na página inicial, o seletor “entrar como” usa os usuários do seed lidos no servidor. Ele envia a escolha a `POST /api/session`, permite trocar de usuário e sair com `DELETE /api/session`. O usuário selecionado persiste após recarregar a página por meio do cookie.
 
 ## Dados de exemplo e modelagem
 

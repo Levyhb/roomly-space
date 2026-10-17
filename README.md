@@ -1,10 +1,10 @@
 # Roomly Space
 
-Sistema interno de reserva de salas de reunião desenvolvido para o desafio técnico Full Stack Pleno.
+Sistema interno de reserva de salas de reunião desenvolvido para o desafio técnico Full Stack Pleno da Sensedia.
 
 ## Estado do projeto
 
-Planejamento inicial. A aplicação ainda não foi implementada. As instruções executáveis, testes e o desenho de produção serão acrescentados durante o desenvolvimento.
+A base Next.js foi criada. As funcionalidades de salas e reservas, o banco com seed, os testes e a CI serão acrescentados nas próximas etapas.
 
 ## Escopo previsto
 
@@ -15,17 +15,24 @@ Planejamento inicial. A aplicação ainda não foi implementada. As instruções
 - Duração máxima configurável por sala (SALA-6).
 - Reservas apenas em dias úteis, das 08h às 20h (hotfix SALA-5).
 
-## Como rodar
+## Como rodar a base atual
 
-A preencher após o setup. Objetivo: instalar dependências, preparar banco com dados de exemplo e iniciar a aplicação em até três comandos.
+Requer Node.js 24.19.0 (registrado em `.nvmrc`) e npm. Na raiz do projeto:
+
+```bash
+npm ci
+npm run dev
+```
+
+Acesse `http://localhost:3000`. Neste estágio, a página mostra apenas que o sistema está em construção. O banco e o seed serão adicionados no setup; a versão final deverá subir com dados de exemplo em até três comandos. Para verificar a base atual, execute `npm run typecheck` e `npm run build`.
 
 ## Decisões técnicas
 
 | Escolha | Motivo |
 | --- | --- |
-| Next.js com App Router e TypeScript strict | Atende ao requisito obrigatório; páginas e API REST podem viver na mesma aplicação. |
-| Node.js 24 LTS e npm | Runtime com suporte de longo prazo e instalação reproduzível pelo lockfile. |
-| SQLite e Sequelize v6 | Banco relacional local, sem serviço externo; Sequelize oferece models, migrations e seeds em uma ferramenta familiar ao candidato. |
+| Next.js 16.4.2 com App Router e TypeScript strict | Atende ao requisito obrigatório; páginas e API REST podem viver na mesma aplicação. A versão está fixada no lockfile para reproduzir o ambiente. |
+| Node.js 24.19.0 LTS e npm | Runtime com suporte de longo prazo e instalação reproduzível pelo lockfile. |
+| SQLite e Sequelize v6 | Banco relacional local, sem serviço externo; Sequelize oferece models, migrations e seeds em uma ferramenta que possuo familiaridade. |
 | Zod | Valida dados recebidos pela API antes de aplicar as regras de negócio. |
 | Material UI | Acelera a construção de formulários e componentes responsivos. |
 | Axios no cliente | Centraliza as chamadas HTTP das interações feitas no navegador. |

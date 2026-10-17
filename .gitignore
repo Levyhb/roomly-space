@@ -1,0 +1,11 @@
+# Notas pessoais de preparação para a apresentação
+notes/
+
+# Arquivos gerados e configuração local
+node_modules/
+.next/
+coverage/
+.env*
+!.env.example
+*.sqlite
+*.sqlite-journal

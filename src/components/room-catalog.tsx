@@ -1,6 +1,7 @@
 "use client";
 
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -16,12 +17,15 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { RoomCard } from "@/components/room-card";
 import { RoomCardSkeleton } from "@/components/room-card-skeleton";
+import { ReservationDialog } from "@/components/reservation-dialog";
 import { api } from "@/services/api/client";
 import type {
   ResourceOptionsResponse,
   RoomCatalogResponse,
   RoomResource,
 } from "@/types/room-catalog";
+import type { CatalogRoom } from "@/types/room-catalog";
+import type { SessionUser } from "@/types/session";
 
 const capacityOptions = [
   { value: "2-4", label: "2 a 4 pessoas" },
@@ -100,6 +104,11 @@ export function RoomCatalog() {
   const [resources, setResources] = useState<RoomResource[]>([]);
   const [resourceRetry, setResourceRetry] = useState(0);
   const [retry, setRetry] = useState(0);
+  const [checkingRoomId, setCheckingRoomId] = useState<number | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<CatalogRoom | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const sessionRequestId = useRef(0);
+  const sessionController = useRef<AbortController | null>(null);
   const requestKey = `${query}|${retry}`;
   const [result, setResult] = useState<{
     key: string;
@@ -114,6 +123,14 @@ export function RoomCatalog() {
     resource && !resources.some((item) => item.code === resource)
       ? [{ code: resource, name: resource }, ...resources]
       : resources;
+
+  useEffect(
+    () => () => {
+      sessionRequestId.current += 1;
+      sessionController.current?.abort();
+    },
+    [],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -212,6 +229,54 @@ export function RoomCatalog() {
     navigate({ q: "", capacity: "", resource: "", page: "" });
   }
 
+  async function openReservation(
+    room: CatalogRoom,
+    trigger: HTMLButtonElement,
+  ) {
+    sessionController.current?.abort();
+    const controller = new AbortController();
+    sessionController.current = controller;
+    const currentRequest = ++sessionRequestId.current;
+    triggerRef.current = trigger;
+    setCheckingRoomId(room.id);
+    try {
+      const { data } = await api.get<{ user: SessionUser }>("/session", {
+        signal: controller.signal,
+      });
+      if (
+        currentRequest !== sessionRequestId.current ||
+        controller.signal.aborted
+      )
+        return;
+      if (!data.user) throw new Error("Sessão ausente");
+      setSelectedRoom(room);
+    } catch (error) {
+      if (
+        currentRequest !== sessionRequestId.current ||
+        controller.signal.aborted
+      )
+        return;
+      toast.error(
+        axios.isAxiosError(error) && error.response?.status === 401
+          ? "Entre como um usuário para reservar."
+          : "Não foi possível validar a sessão. Tente novamente.",
+      );
+    } finally {
+      if (currentRequest === sessionRequestId.current) {
+        sessionController.current = null;
+        setCheckingRoomId(null);
+      }
+    }
+  }
+
+  function closeReservation() {
+    sessionRequestId.current += 1;
+    sessionController.current?.abort();
+    sessionController.current = null;
+    setSelectedRoom(null);
+    queueMicrotask(() => triggerRef.current?.focus());
+  }
+
   return (
     <Container
       component="section"
@@ -305,7 +370,12 @@ export function RoomCatalog() {
           </Typography>
           <RoomGrid>
             {catalog.items.slice(0, 12).map((room) => (
-              <RoomCard key={room.id} room={room} />
+              <RoomCard
+                key={room.id}
+                room={room}
+                checking={checkingRoomId === room.id}
+                onReserve={(trigger) => void openReservation(room, trigger)}
+              />
             ))}
           </RoomGrid>
           {catalog.pagination.totalPages > 1 && (
@@ -327,6 +397,9 @@ export function RoomCatalog() {
         >
           <MeetingEmpty hasFilters={hasFilters} onClear={clearFilters} />
         </Stack>
+      )}
+      {selectedRoom && (
+        <ReservationDialog room={selectedRoom} onClose={closeReservation} />
       )}
     </Container>
   );

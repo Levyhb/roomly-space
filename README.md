@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A primeira etapa da SALA-2 acrescenta disponibilidade pública e criação de reservas validada no servidor; o modal de reserva ainda não foi implementado.
+A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo.
 
 ## Escopo previsto
 
@@ -35,6 +35,8 @@ O catálogo pode ser consultado sem sessão em `GET /api/rooms?q=&capacity=&reso
 
 O início precisa estar no futuro, entrada e saída devem ser no mesmo dia, em ordem crescente, e a duração deve ser de 15 a 240 minutos, inclusive. Intervalos adjacentes são aceitos; sobreposição retorna `409`. Data, horário ou duração inválidos retornam `400`; sessão ausente, `401`; sala inexistente, `404`. A consulta de disponibilidade informa a agenda atual, mas o `POST` verifica o conflito novamente dentro de uma transação SQLite `IMMEDIATE`. Contenção do SQLite também recebe resposta `409` controlada. As regras de dias úteis e 08h–20h pertencem ao hotfix SALA-5; a duração por sala pertence à SALA-6.
 
+No catálogo, “Reservar” consulta a sessão atual antes de abrir o diálogo. Sem usuário selecionado, a interface orienta a usar “Entrar como”. O modal permite escolher a data pelo calendário nativo, digitar entrada e saída em `HH:mm` e consultar os horários ocupados. A consulta tem loading, retry e cancelamento de respostas antigas; em `409`, os campos permanecem preenchidos e a disponibilidade é atualizada. Após `201`, o modal fecha e reabre com formulário limpo. Em telas móveis ele ocupa a tela inteira.
+
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 
 Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test` e `npm run build`. Os comandos `npm run lint:fix` e `npm run format` aplicam correções locais antes de uma nova verificação.
@@ -58,6 +60,7 @@ Após a primeira execução verde no PR de setup, configurar uma [ruleset de bra
 | SQLite e Sequelize 6.37.8                                           | Banco relacional local, sem serviço externo; Sequelize oferece models, migrations e seeds em uma ferramenta que possuo familiaridade.            |
 | Zod                                                                 | Valida dados recebidos pela API antes de aplicar as regras de negócio.                                                                           |
 | Material UI e Material Icons                                        | Aceleram a construção de formulários, navegação acessível e componentes responsivos com identidade consistente.                                  |
+| Campos MUI com data/hora nativas                                    | Oferecem calendário e edição `HH:mm` sem dependência prerelease; a versão estável do MUI X Date Pickers ainda não declara suporte ao MUI 9.5.    |
 | Axios no cliente                                                    | Centraliza as chamadas HTTP das interações feitas no navegador.                                                                                  |
 | Day.js com plugins UTC/timezone                                     | Interpreta os horários recebidos em `America/Sao_Paulo` e persiste instantes UTC sem depender do fuso do servidor.                               |
 | React Toastify                                                      | Centraliza mensagens de falha das interações assíncronas sem acoplar o feedback visual aos componentes de formulário.                            |
@@ -68,7 +71,7 @@ Após a primeira execução verde no PR de setup, configurar uma [ruleset de bra
 
 Referência para as telas funcionais: cabeçalho claro, roxo para identidade e navegação, laranja para ações principais e cartões para as salas. Os tokens de cor estão em `src/app/globals.css`; o tema do Material UI reproduz essa paleta. `AppRouterCacheProvider` integra o MUI ao App Router e evita problemas de renderização dos estilos no servidor. Os PNGs locais da marca, do hero e do fallback das salas estão otimizados em `public/assets`; título e descrição do hero permanecem em HTML para preservar acessibilidade e adaptação aos breakpoints.
 
-O cabeçalho fica no layout raiz e persiste entre as páginas. No desktop, exibe a navegação central e a rota ativa; no mobile, usa um drawer à esquerda que fecha com `Escape` e devolve o foco ao botão. O seletor informa progresso e erros por região acessível e toast. O catálogo usa até 12 cartões por página, com quatro colunas no desktop, duas em telas intermediárias e uma no mobile. Imagens ausentes ou com erro usam o fallback local. O botão “Reservar” permanece desabilitado até a SALA-2. Os links de “Minhas reservas” e “Admin” já representam a navegação planejada, mas suas rotas serão implementadas nas demandas SALA-3 e SALA-4. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
+O cabeçalho fica no layout raiz e persiste entre as páginas. No desktop, exibe a navegação central e a rota ativa; no mobile, usa um drawer à esquerda que fecha com `Escape` e devolve o foco ao botão. O seletor informa progresso e erros por região acessível e toast. O catálogo usa até 12 cartões por página, com quatro colunas no desktop, duas em telas intermediárias e uma no mobile. Imagens ausentes ou com erro usam o fallback local. O botão “Reservar” abre o diálogo após validação da sessão. Os links de “Minhas reservas” e “Admin” já representam a navegação planejada, mas suas rotas serão implementadas nas demandas SALA-3 e SALA-4. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
 
 ## Organização do código
 
@@ -98,7 +101,7 @@ As migrations versionadas em `database/migrations` criam `users`, `rooms`, `reso
 
 O seed em `database/seeders` cria cinco salas, dois usuários `USER`, um `ADMIN`, seis recursos e seus vínculos com as salas. Ele pode ser executado novamente sem duplicar dados nem sobrescrever endereço ou descrição já editados.
 
-Reservas têm usuário, sala, início e fim; a duração máxima por sala será adicionada na SALA-6. A forma de registrar cancelamentos será definida na SALA-3. A prevenção de sobreposição dependerá de validação e transação no servidor durante a SALA-2; SQLite não oferece uma constraint simples para intervalos de tempo sobrepostos.
+Reservas têm usuário, sala, início e fim; a duração máxima por sala será adicionada na SALA-6. A forma de registrar cancelamentos será definida na SALA-3. A sobreposição é impedida por validação dentro de uma transação no servidor; SQLite não oferece uma constraint simples para intervalos de tempo sobrepostos.
 
 ## Fluxo de entrega
 

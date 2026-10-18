@@ -3,7 +3,6 @@
 import { Box } from "@mui/material";
 import Image from "next/image";
 import { useState } from "react";
-import type { CatalogRoom } from "@/types/room-catalog";
 
 const fallbackImage = "/assets/room-placeholder.png";
 
@@ -11,7 +10,7 @@ export function RoomImage({
   room,
   aspectRatio = "16 / 9",
 }: {
-  room: CatalogRoom;
+  room: { name: string; imageUrl: string | null };
   aspectRatio?: string | { xs: string; sm: string };
 }) {
   const [image, setImage] = useState(room.imageUrl || fallbackImage);

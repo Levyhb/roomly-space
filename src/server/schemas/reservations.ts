@@ -22,3 +22,18 @@ export const createReservationSchema = z.strictObject({
 });
 
 export type CreateReservationInput = z.infer<typeof createReservationSchema>;
+
+export const listReservationsQuerySchema = z.strictObject({
+  q: z.string().trim().max(120).default(""),
+  status: z.enum(["active", "completed", "all"]).default("active"),
+  page: z
+    .string()
+    .regex(/^[1-9]\d*$/)
+    .transform(Number)
+    .pipe(z.number().int().safe())
+    .default(1),
+});
+
+export const reservationIdParamSchema = roomIdParamSchema;
+
+export type ListReservationsInput = z.infer<typeof listReservationsQuerySchema>;

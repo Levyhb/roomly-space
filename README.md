@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui migrations, seeds, API pública e catálogo responsivo com filtros na URL, paginação e estados de carregamento, vazio e erro. As reservas permanecem para os cards seguintes.
+A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo.
 
 ## Escopo previsto
 
@@ -29,11 +29,21 @@ Acesse `http://localhost:3000`. A página inicial contém o cabeçalho compartil
 
 O catálogo pode ser consultado sem sessão em `GET /api/rooms?q=&capacity=&resource=&page=`. As faixas aceitas em `capacity` são `2-4`, `5-8`, `9-12` e `13-plus`; os filtros são combináveis, a página começa em 1 e contém no máximo 12 salas. A interface ajusta URLs com páginas acima do total para a última página disponível. `GET /api/resources` fornece as opções do filtro. Parâmetros inválidos recebem `400` e a resposta do catálogo separa `items` dos metadados de `pagination`.
 
+### Reservas (API)
+
+`GET /api/rooms/1/availability?date=2030-10-20` é público e retorna `{roomId, date, timezone, unavailable}`; cada item de `unavailable` contém somente `startTime` e `endTime` em `HH:mm`. `POST /api/reservations` recebe JSON `{ "roomId": 1, "date": "2030-10-20", "startTime": "10:00", "endTime": "11:00" }` e exige uma sessão selecionada em `POST /api/session`. O `userId` vem exclusivamente da sessão; enviar esse campo no corpo causa `400`. A criação responde `201` com `{reservation}`; o intervalo é salvo em UTC e apresentado em `America/Sao_Paulo`.
+
+O início precisa estar no futuro, entrada e saída devem ser no mesmo dia, em ordem crescente, e a duração deve ser de 15 a 240 minutos, inclusive. Intervalos adjacentes são aceitos; sobreposição retorna `409`. Data, horário ou duração inválidos retornam `400`; sessão ausente, `401`; sala inexistente, `404`. A consulta de disponibilidade informa a agenda atual, mas o `POST` verifica o conflito novamente dentro de uma transação SQLite `IMMEDIATE`. Contenção do SQLite também recebe resposta `409` controlada. As regras de dias úteis e 08h–20h pertencem ao hotfix SALA-5; a duração por sala pertence à SALA-6.
+
+No catálogo, “Reservar” consulta a sessão atual antes de abrir o diálogo. Sem usuário selecionado, a interface orienta a usar “Entrar como”. O modal permite escolher a data pelo calendário nativo, digitar entrada e saída em `HH:mm` e consultar os horários ocupados. A consulta tem loading, retry e cancelamento de respostas antigas; em `409`, os campos permanecem preenchidos e a disponibilidade é atualizada. Após `201`, o modal fecha e reabre com formulário limpo. Em telas móveis ele ocupa a tela inteira.
+
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 
 Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test` e `npm run build`. Os comandos `npm run lint:fix` e `npm run format` aplicam correções locais antes de uma nova verificação.
 
-Os testes unitários de componentes e código executado no navegador ficam em `tests/unit/client`; regras e módulos do servidor ficam em `tests/unit/server`. Os cenários são documentados em `tests/scenarios`, e os helpers reutilizáveis ficam em `tests/helpers`. O Jest usa ambiente Node por padrão e `jsdom` apenas nos testes de componentes. Os testes permanecem isolados e podem ser executados em paralelo pelo Jest, permitindo que a suíte cresça sem impor execução sequencial. O setup cobre autorização da sessão e troca de usuário na interface com repository, cookie e HTTP simulados, sem acessar SQLite. `npm run test:watch` executa os testes durante o desenvolvimento e `npm run test:coverage` gera o relatório de cobertura. As regras dos cards receberão testes próprios ao serem implementadas.
+O Prettier aceita o fim de linha nativo do arquivo (`LF` ou `CRLF`) para que a verificação funcione no checkout Windows e no CI Linux sem alterar arquivos não relacionados.
+
+Os testes unitários de componentes e código executado no navegador ficam em `tests/unit/client`; regras e módulos do servidor ficam em `tests/unit/server`. Quando uma funcionalidade possuir vários arquivos de teste, eles serão agrupados em uma subpasta com o nome do domínio, como `tests/unit/server/reservation`. Os cenários são documentados em `tests/scenarios`, e os helpers reutilizáveis ficam em `tests/helpers`. O Jest usa ambiente Node por padrão e `jsdom` apenas nos testes de componentes. Os testes permanecem isolados e podem ser executados em paralelo pelo Jest, permitindo que a suíte cresça sem impor execução sequencial. O setup cobre autorização da sessão e troca de usuário na interface com repository, cookie e HTTP simulados, sem acessar SQLite. `npm run test:watch` executa os testes durante o desenvolvimento e `npm run test:coverage` gera o relatório de cobertura. As regras dos cards receberão testes próprios ao serem implementadas.
 
 ## Integração contínua
 
@@ -50,7 +60,9 @@ Após a primeira execução verde no PR de setup, configurar uma [ruleset de bra
 | SQLite e Sequelize 6.37.8                                           | Banco relacional local, sem serviço externo; Sequelize oferece models, migrations e seeds em uma ferramenta que possuo familiaridade.            |
 | Zod                                                                 | Valida dados recebidos pela API antes de aplicar as regras de negócio.                                                                           |
 | Material UI e Material Icons                                        | Aceleram a construção de formulários, navegação acessível e componentes responsivos com identidade consistente.                                  |
+| Campos MUI com data/hora nativas                                    | Oferecem calendário e edição `HH:mm` sem dependência prerelease; a versão estável do MUI X Date Pickers ainda não declara suporte ao MUI 9.5.    |
 | Axios no cliente                                                    | Centraliza as chamadas HTTP das interações feitas no navegador.                                                                                  |
+| Day.js com plugins UTC/timezone                                     | Interpreta os horários recebidos em `America/Sao_Paulo` e persiste instantes UTC sem depender do fuso do servidor.                               |
 | React Toastify                                                      | Centraliza mensagens de falha das interações assíncronas sem acoplar o feedback visual aos componentes de formulário.                            |
 | Jest e React Testing Library                                        | Testes unitários das regras e dos componentes interativos, com dependências externas controladas por mocks.                                      |
 | ESLint 9 com regras Next.js Core Web Vitals/TypeScript e Prettier 3 | Detectam problemas de código e mantêm formatação consistente; o CI executa os mesmos scripts usados localmente.                                  |
@@ -59,7 +71,7 @@ Após a primeira execução verde no PR de setup, configurar uma [ruleset de bra
 
 Referência para as telas funcionais: cabeçalho claro, roxo para identidade e navegação, laranja para ações principais e cartões para as salas. Os tokens de cor estão em `src/app/globals.css`; o tema do Material UI reproduz essa paleta. `AppRouterCacheProvider` integra o MUI ao App Router e evita problemas de renderização dos estilos no servidor. Os PNGs locais da marca, do hero e do fallback das salas estão otimizados em `public/assets`; título e descrição do hero permanecem em HTML para preservar acessibilidade e adaptação aos breakpoints.
 
-O cabeçalho fica no layout raiz e persiste entre as páginas. No desktop, exibe a navegação central e a rota ativa; no mobile, usa um drawer à esquerda que fecha com `Escape` e devolve o foco ao botão. O seletor informa progresso e erros por região acessível e toast. O catálogo usa até 12 cartões por página, com quatro colunas no desktop, duas em telas intermediárias e uma no mobile. Imagens ausentes ou com erro usam o fallback local. O botão “Reservar” permanece desabilitado até a SALA-2. Os links de “Minhas reservas” e “Admin” já representam a navegação planejada, mas suas rotas serão implementadas nas demandas SALA-3 e SALA-4. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
+O cabeçalho fica no layout raiz e persiste entre as páginas. No desktop, exibe a navegação central e a rota ativa; no mobile, usa um drawer à esquerda que fecha com `Escape` e devolve o foco ao botão. O seletor informa progresso e erros por região acessível e toast. O catálogo usa até 12 cartões por página, com quatro colunas no desktop, duas em telas intermediárias e uma no mobile. Imagens ausentes ou com erro usam o fallback local. O botão “Reservar” abre o diálogo após validação da sessão. Os links de “Minhas reservas” e “Admin” já representam a navegação planejada, mas suas rotas serão implementadas nas demandas SALA-3 e SALA-4. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
 
 ## Organização do código
 
@@ -89,7 +101,7 @@ As migrations versionadas em `database/migrations` criam `users`, `rooms`, `reso
 
 O seed em `database/seeders` cria cinco salas, dois usuários `USER`, um `ADMIN`, seis recursos e seus vínculos com as salas. Ele pode ser executado novamente sem duplicar dados nem sobrescrever endereço ou descrição já editados.
 
-Reservas têm usuário, sala, início e fim; a duração máxima por sala será adicionada na SALA-6. A forma de registrar cancelamentos será definida na SALA-3. A prevenção de sobreposição dependerá de validação e transação no servidor durante a SALA-2; SQLite não oferece uma constraint simples para intervalos de tempo sobrepostos.
+Reservas têm usuário, sala, início e fim; a duração máxima por sala será adicionada na SALA-6. A forma de registrar cancelamentos será definida na SALA-3. A sobreposição é impedida por validação dentro de uma transação no servidor; SQLite não oferece uma constraint simples para intervalos de tempo sobrepostos.
 
 ## Fluxo de entrega
 

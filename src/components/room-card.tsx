@@ -8,11 +8,8 @@ import PersonalVideoOutlinedIcon from "@mui/icons-material/PersonalVideoOutlined
 import TvOutlinedIcon from "@mui/icons-material/TvOutlined";
 import ViewQuiltOutlinedIcon from "@mui/icons-material/ViewQuiltOutlined";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/material";
-import Image from "next/image";
-import { useState } from "react";
+import { RoomImage } from "@/components/room-image";
 import type { CatalogRoom } from "@/types/room-catalog";
-
-const fallbackImage = "/assets/room-placeholder.png";
 
 const resourceIcons: Record<string, typeof MeetingRoomOutlinedIcon> = {
   accessibility: AccessibleOutlinedIcon,
@@ -23,9 +20,15 @@ const resourceIcons: Record<string, typeof MeetingRoomOutlinedIcon> = {
   video: ConnectedTvOutlinedIcon,
 };
 
-export function RoomCard({ room }: { room: CatalogRoom }) {
-  const [image, setImage] = useState(room.imageUrl || fallbackImage);
-
+export function RoomCard({
+  room,
+  onReserve,
+  checking = false,
+}: {
+  room: CatalogRoom;
+  onReserve?: (trigger: HTMLButtonElement) => void;
+  checking?: boolean;
+}) {
   return (
     <Card
       component="article"
@@ -37,24 +40,7 @@ export function RoomCard({ room }: { room: CatalogRoom }) {
         borderRadius: 3,
       }}
     >
-      <Box
-        sx={{
-          position: "relative",
-          width: "100%",
-          aspectRatio: "16 / 9",
-          bgcolor: "grey.100",
-        }}
-      >
-        <Image
-          src={image}
-          alt={`Imagem de ${room.name}`}
-          fill
-          sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 25vw"
-          style={{ objectFit: "cover" }}
-          unoptimized={image !== fallbackImage}
-          onError={() => setImage(fallbackImage)}
-        />
-      </Box>
+      <RoomImage room={room} />
       <Stack spacing={1.5} sx={{ p: 2.5, flex: 1 }}>
         <Box>
           <Typography component="h3" variant="h6" sx={{ fontWeight: 700 }}>
@@ -88,8 +74,13 @@ export function RoomCard({ room }: { room: CatalogRoom }) {
         <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
           {room.description}
         </Typography>
-        <Button variant="contained" fullWidth disabled>
-          Reservar
+        <Button
+          variant="contained"
+          fullWidth
+          disabled={!onReserve || checking}
+          onClick={(event) => onReserve?.(event.currentTarget)}
+        >
+          {checking ? "Verificando..." : "Reservar"}
         </Button>
       </Stack>
     </Card>

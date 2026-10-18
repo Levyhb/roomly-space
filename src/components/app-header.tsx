@@ -24,6 +24,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { api } from "@/services/api/client";
+import { SESSION_CHANGED_EVENT } from "@/types/session";
 import type { SessionUser } from "@/types/session";
 
 type AppHeaderProps = {
@@ -59,6 +60,7 @@ export function AppHeader({ users, initialUser }: AppHeaderProps) {
         });
         setCurrentUser(response.data.user);
       }
+      window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
     } catch {
       const message = "Não foi possível trocar de usuário. Tente novamente.";
       setError(message);

@@ -7,11 +7,41 @@ const users = [
 ];
 
 const rooms = [
-  { id: 1, name: "Ipê", capacity: 4 },
-  { id: 2, name: "Araucária", capacity: 6 },
-  { id: 3, name: "Jatobá", capacity: 8 },
-  { id: 4, name: "Pau-Brasil", capacity: 10 },
-  { id: 5, name: "Jacarandá", capacity: 14 },
+  {
+    id: 1,
+    name: "Ipê",
+    capacity: 4,
+    address: "Unidade principal",
+    description: "Sala de reunião",
+  },
+  {
+    id: 2,
+    name: "Araucária",
+    capacity: 6,
+    address: "Unidade principal",
+    description: "Sala de reunião",
+  },
+  {
+    id: 3,
+    name: "Jatobá",
+    capacity: 8,
+    address: "Unidade principal",
+    description: "Sala de reunião",
+  },
+  {
+    id: 4,
+    name: "Pau-Brasil",
+    capacity: 10,
+    address: "Unidade principal",
+    description: "Sala de reunião",
+  },
+  {
+    id: 5,
+    name: "Jacarandá",
+    capacity: 14,
+    address: "Unidade principal",
+    description: "Sala de reunião",
+  },
 ];
 
 const resources = [
@@ -60,7 +90,7 @@ module.exports = {
         await insertIfMissing(
           queryInterface.sequelize,
           "rooms",
-          ["id", "name", "capacity"],
+          ["id", "name", "capacity", "address", "description"],
           room,
           transaction,
         );

@@ -3,6 +3,7 @@ import type {
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
+  NonAttribute,
 } from "sequelize";
 
 export type UserRole = "USER" | "ADMIN";
@@ -56,6 +57,10 @@ export class Room extends Model<
   declare id: CreationOptional<number>;
   declare name: string;
   declare capacity: number;
+  declare address: string;
+  declare description: string;
+  declare imageUrl: CreationOptional<string | null>;
+  declare resources?: NonAttribute<Resource[]>;
 }
 
 Room.init(
@@ -67,6 +72,9 @@ Room.init(
       allowNull: false,
       validate: { min: 1 },
     },
+    address: { type: DataTypes.STRING(160), allowNull: false },
+    description: { type: DataTypes.TEXT, allowNull: false },
+    imageUrl: { type: DataTypes.TEXT, allowNull: true, field: "image_url" },
   },
   { sequelize, tableName: "rooms", timestamps: false },
 );
@@ -116,6 +124,13 @@ RoomResource.init(
   },
   { sequelize, tableName: "room_resources", timestamps: false },
 );
+
+Room.belongsToMany(Resource, {
+  through: RoomResource,
+  as: "resources",
+  foreignKey: "roomId",
+  otherKey: "resourceId",
+});
 
 export class Reservation extends Model<
   InferAttributes<Reservation>,

@@ -1,4 +1,6 @@
 import { Box, Container, Typography } from "@mui/material";
+import { Suspense } from "react";
+import { RoomCatalog } from "@/components/room-catalog";
 
 export function HomeShell() {
   return (
@@ -61,6 +63,9 @@ export function HomeShell() {
           </Box>
         </Container>
       </Box>
+      <Suspense fallback={null}>
+        <RoomCatalog />
+      </Suspense>
     </Box>
   );
 }

@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 já possui migrations, seeds e API pública do catálogo; a interface atual contém o cabeçalho responsivo persistente e o hero da listagem. Filtros, paginação e cartões serão acrescentados na próxima etapa da SALA-1. As reservas permanecem para os cards seguintes.
+A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui migrations, seeds, API pública e catálogo responsivo com filtros na URL, paginação e estados de carregamento, vazio e erro. As reservas permanecem para os cards seguintes.
 
 ## Escopo previsto
 
@@ -25,9 +25,9 @@ npm run db:setup
 npm run dev
 ```
 
-Acesse `http://localhost:3000`. A página inicial contém o cabeçalho compartilhado, a navegação responsiva, o hero do catálogo e o seletor dos usuários do seed. `GET /api/health` responde `200` com `{"status":"ok"}` e indica apenas que o servidor HTTP está ativo; ainda não verifica o banco. `db:setup` executa `db:migrate` e, somente se a migration terminar sem erro, executa `db:seed`.
+Acesse `http://localhost:3000`. A página inicial contém o cabeçalho compartilhado, a navegação responsiva, o catálogo e o seletor dos usuários do seed. A busca por nome é aplicada ao enviar o formulário; capacidade e recurso são aplicados ao selecionar. Os filtros e a página ficam na URL e podem ser compartilhados. `GET /api/health` responde `200` com `{"status":"ok"}` e indica apenas que o servidor HTTP está ativo; ainda não verifica o banco. `db:setup` executa `db:migrate` e, somente se a migration terminar sem erro, executa `db:seed`.
 
-O catálogo pode ser consultado sem sessão em `GET /api/rooms?q=&capacity=&resource=&page=`. As faixas aceitas em `capacity` são `2-4`, `5-8`, `9-12` e `13-plus`; os filtros são combináveis, a página começa em 1 e contém no máximo 12 salas. `GET /api/resources` fornece as opções do filtro. Parâmetros inválidos recebem `400` e a resposta do catálogo separa `items` dos metadados de `pagination`.
+O catálogo pode ser consultado sem sessão em `GET /api/rooms?q=&capacity=&resource=&page=`. As faixas aceitas em `capacity` são `2-4`, `5-8`, `9-12` e `13-plus`; os filtros são combináveis, a página começa em 1 e contém no máximo 12 salas. A interface ajusta URLs com páginas acima do total para a última página disponível. `GET /api/resources` fornece as opções do filtro. Parâmetros inválidos recebem `400` e a resposta do catálogo separa `items` dos metadados de `pagination`.
 
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 
@@ -59,7 +59,7 @@ Após a primeira execução verde no PR de setup, configurar uma [ruleset de bra
 
 Referência para as telas funcionais: cabeçalho claro, roxo para identidade e navegação, laranja para ações principais e cartões para as salas. Os tokens de cor estão em `src/app/globals.css`; o tema do Material UI reproduz essa paleta. `AppRouterCacheProvider` integra o MUI ao App Router e evita problemas de renderização dos estilos no servidor. Os PNGs locais da marca, do hero e do fallback das salas estão otimizados em `public/assets`; título e descrição do hero permanecem em HTML para preservar acessibilidade e adaptação aos breakpoints.
 
-O cabeçalho fica no layout raiz e persiste entre as páginas. No desktop, exibe a navegação central e a rota ativa; no mobile, usa um drawer à esquerda que fecha com `Escape` e devolve o foco ao botão. O seletor informa progresso e erros por região acessível e toast. Os cartões, filtros e paginação entram na próxima etapa da SALA-1. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
+O cabeçalho fica no layout raiz e persiste entre as páginas. No desktop, exibe a navegação central e a rota ativa; no mobile, usa um drawer à esquerda que fecha com `Escape` e devolve o foco ao botão. O seletor informa progresso e erros por região acessível e toast. O catálogo usa até 12 cartões por página, com quatro colunas no desktop, duas em telas intermediárias e uma no mobile. Imagens ausentes ou com erro usam o fallback local. O botão “Reservar” permanece desabilitado até a SALA-2. Os links de “Minhas reservas” e “Admin” já representam a navegação planejada, mas suas rotas serão implementadas nas demandas SALA-3 e SALA-4. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
 
 ## Organização do código
 

@@ -28,3 +28,19 @@ Validação manual do seed: alterar o endereço de uma sala e a descrição de o
 | TC_SALA_1_015 | Abrir menu móvel e pressionar Escape | Drawer fecha e botão atualiza `aria-expanded`      |
 | TC_SALA_1_016 | Links no desktop e menu móvel        | Três rotas corretas; Salas tem `aria-current=page` |
 | TC_SALA_1_017 | Falha ao trocar usuário              | Erro assíncrono é comunicado por toast             |
+
+## Catálogo no navegador
+
+| ID            | Cenário                                   | Esperado                                                        |
+| ------------- | ----------------------------------------- | --------------------------------------------------------------- |
+| TC_SALA_1_018 | Card sem imagem                           | Dados visíveis, fallback local e reserva desabilitada           |
+| TC_SALA_1_019 | URL de imagem falha                       | Card troca para fallback local                                  |
+| TC_SALA_1_020 | URL compartilhada com todos os filtros    | Controles e consulta reproduzem os parâmetros                   |
+| TC_SALA_1_021 | Busca e alteração de capacidade           | URL preserva outros filtros e remove página anterior            |
+| TC_SALA_1_022 | Treze resultados                          | Somente 12 cards por página; navegação preserva filtros         |
+| TC_SALA_1_023 | Resposta anterior termina após nova busca | Skeleton é mostrado; resultado antigo não substitui o novo      |
+| TC_SALA_1_024 | Sem salas e sem resultado filtrado        | Mensagens distintas; limpar filtros retorna à URL base          |
+| TC_SALA_1_025 | Erro ao carregar salas                    | Toast e ação de tentar novamente; nova chamada recupera a lista |
+| TC_SALA_1_026 | Alterar recurso com capacidade ativa      | URL preserva capacidade e remove página anterior                |
+| TC_SALA_1_027 | Erro ao carregar recursos                 | Toast permite refazer a consulta das opções                     |
+| TC_SALA_1_028 | Página acima do total                     | URL é ajustada para a última página válida                      |

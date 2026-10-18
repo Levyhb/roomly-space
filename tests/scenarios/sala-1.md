@@ -20,3 +20,11 @@
 Os testes unitários simulam o repository. A migration, o seed e as consultas SQL são validados separadamente em bancos temporários antes da entrega da etapa.
 
 Validação manual do seed: alterar o endereço de uma sala e a descrição de outra, deixar o campo restante vazio e repetir `db:seed`. Os valores editados devem permanecer; os campos vazios devem receber os valores do seed. Em banco legado, os placeholders da migration também devem ser substituídos.
+
+## Navegação compartilhada
+
+| ID            | Cenário                              | Esperado                                           |
+| ------------- | ------------------------------------ | -------------------------------------------------- |
+| TC_SALA_1_015 | Abrir menu móvel e pressionar Escape | Drawer fecha e botão atualiza `aria-expanded`      |
+| TC_SALA_1_016 | Links no desktop e menu móvel        | Três rotas corretas; Salas tem `aria-current=page` |
+| TC_SALA_1_017 | Falha ao trocar usuário              | Erro assíncrono é comunicado por toast             |

@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o endpoint de saúde, o banco SQLite, a sessão simulada por cookie, a interface inicial com Material UI, os testes unitários e o workflow de CI foram configurados. A listagem de salas e as reservas serão acrescentadas nas próximas etapas. A CI ainda precisa ser observada em um PR e a proteção das branches configurada no GitHub.
+A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 já possui migrations, seeds e API pública do catálogo; a interface atual contém o cabeçalho responsivo persistente e o hero da listagem. Filtros, paginação e cartões serão acrescentados na próxima etapa da SALA-1. As reservas permanecem para os cards seguintes.
 
 ## Escopo previsto
 
@@ -25,7 +25,9 @@ npm run db:setup
 npm run dev
 ```
 
-Acesse `http://localhost:3000`. A página inicial contém somente a estrutura visual compartilhada e permite escolher um usuário do seed; a listagem, os filtros e os endpoints de salas entram na SALA-1. `GET /api/health` responde `200` com `{"status":"ok"}` e indica apenas que o servidor HTTP está ativo; ainda não verifica o banco. `db:setup` executa `db:migrate` e, somente se a migration terminar sem erro, executa `db:seed`.
+Acesse `http://localhost:3000`. A página inicial contém o cabeçalho compartilhado, a navegação responsiva, o hero do catálogo e o seletor dos usuários do seed. `GET /api/health` responde `200` com `{"status":"ok"}` e indica apenas que o servidor HTTP está ativo; ainda não verifica o banco. `db:setup` executa `db:migrate` e, somente se a migration terminar sem erro, executa `db:seed`.
+
+O catálogo pode ser consultado sem sessão em `GET /api/rooms?q=&capacity=&resource=&page=`. As faixas aceitas em `capacity` são `2-4`, `5-8`, `9-12` e `13-plus`; os filtros são combináveis, a página começa em 1 e contém no máximo 12 salas. `GET /api/resources` fornece as opções do filtro. Parâmetros inválidos recebem `400` e a resposta do catálogo separa `items` dos metadados de `pagination`.
 
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 
@@ -47,28 +49,29 @@ Após a primeira execução verde no PR de setup, configurar uma [ruleset de bra
 | Node.js 24.19.0 LTS e npm                                           | Runtime com suporte de longo prazo e instalação reproduzível pelo lockfile.                                                                      |
 | SQLite e Sequelize 6.37.8                                           | Banco relacional local, sem serviço externo; Sequelize oferece models, migrations e seeds em uma ferramenta que possuo familiaridade.            |
 | Zod                                                                 | Valida dados recebidos pela API antes de aplicar as regras de negócio.                                                                           |
-| Material UI                                                         | Acelera a construção de formulários e componentes responsivos.                                                                                   |
+| Material UI e Material Icons                                        | Aceleram a construção de formulários, navegação acessível e componentes responsivos com identidade consistente.                                  |
 | Axios no cliente                                                    | Centraliza as chamadas HTTP das interações feitas no navegador.                                                                                  |
+| React Toastify                                                      | Centraliza mensagens de falha das interações assíncronas sem acoplar o feedback visual aos componentes de formulário.                            |
 | Jest e React Testing Library                                        | Testes unitários das regras e dos componentes interativos, com dependências externas controladas por mocks.                                      |
 | ESLint 9 com regras Next.js Core Web Vitals/TypeScript e Prettier 3 | Detectam problemas de código e mantêm formatação consistente; o CI executa os mesmos scripts usados localmente.                                  |
 
 ## Direção visual
 
-Referência para as telas funcionais: cabeçalho claro, roxo para identidade e navegação, laranja para ações principais e cartões para as salas. Os tokens de cor estão em `src/app/globals.css`; o tema do Material UI reproduz essa paleta. `AppRouterCacheProvider` integra o MUI ao App Router e evita problemas de renderização dos estilos no servidor. A marca geométrica representa uma porta de sala e foi desenhada em SVG para continuar nítida em diferentes tamanhos.
+Referência para as telas funcionais: cabeçalho claro, roxo para identidade e navegação, laranja para ações principais e cartões para as salas. Os tokens de cor estão em `src/app/globals.css`; o tema do Material UI reproduz essa paleta. `AppRouterCacheProvider` integra o MUI ao App Router e evita problemas de renderização dos estilos no servidor. Os PNGs locais da marca, do hero e do fallback das salas estão otimizados em `public/assets`; título e descrição do hero permanecem em HTML para preservar acessibilidade e adaptação aos breakpoints.
 
-Nesta etapa, a página mantém apenas o shell compartilhado, a identidade visual, o loading genérico e o seletor de usuário com estados de progresso e erro. Na SALA-1 entram a navegação, os cartões com dados reais e os filtros. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
+O cabeçalho fica no layout raiz e persiste entre as páginas. No desktop, exibe a navegação central e a rota ativa; no mobile, usa um drawer à esquerda que fecha com `Escape` e devolve o foco ao botão. O seletor informa progresso e erros por região acessível e toast. Os cartões, filtros e paginação entram na próxima etapa da SALA-1. “Minhas reservas” seguirá cartões empilhados. A área Admin seguirá abas por categoria, com listagem e ação de adicionar em cada uma; as permissões serão verificadas no servidor durante a SALA-4.
 
 ## Organização do código
 
 - `src/app`: páginas e Route Handlers do App Router; cada handler expõe os métodos HTTP e delega ao controller.
 - `src/server/controllers`: entrada HTTP, validação dos dados recebidos e construção da resposta. O controller de saúde é o primeiro exemplo.
-- `src/server/repositories`: isola consultas ao banco; `src/server/services` será criado quando houver regras de negócio.
+- `src/server/repositories`: isola consultas ao banco; `src/server/services` coordena as regras e o contrato do catálogo.
 - `src/server/db`, `src/server/auth`, `src/server/schemas` e `src/server/http`: models/conexão, identificação e autorização, validação Zod e respostas de erro.
-- `src/services/api`: instância Axios para Client Components. `src/components` contém o tema, a marca e a interface inicial; `src/types` será criado quando houver tipos compartilhados com uso concreto.
+- `src/services/api`: instância Axios para Client Components. `src/components` contém o tema, o cabeçalho, o toast e a interface; `src/types` guarda tipos compartilhados com uso no servidor e no cliente.
 
 A autorização é verificada no servidor: o seletor de usuário definirá uma sessão simulada, e a role é consultada no banco. O fuso das regras de reserva será `America/Sao_Paulo`. O Next carrega Sequelize e SQLite diretamente no runtime Node por `serverExternalPackages`, pois o empacotamento padrão do Turbopack tenta resolver drivers de outros bancos que o projeto não usa.
 
-O helper `validate` recebe dados de body, query ou parâmetros de rota e aplica o schema Zod correspondente. Nesta etapa, o corpo de `POST /api/session` é o primeiro uso; os filtros e IDs dos cards usarão o mesmo helper.
+O helper `validate` recebe dados de body, query ou parâmetros de rota e aplica o schema Zod correspondente. Ele valida a sessão simulada e os filtros do catálogo antes que controller e service processem os valores.
 
 ## Sessão simulada
 
@@ -82,9 +85,9 @@ Na página inicial, o seletor “entrar como” usa os usuários do seed lidos n
 
 ## Dados de exemplo e modelagem
 
-As migrations versionadas em `database/migrations` criam `users`, `rooms`, `resources`, `room_resources` e `reservations`, com chaves estrangeiras e índices para consultas por sala, recurso e usuário. Recursos foram separados em tabelas relacionais para permitir filtros por recurso no banco durante a SALA-1. Migrations e seeders usam CommonJS, carregado diretamente pelo Sequelize CLI; os models da aplicação ficam em TypeScript strict em `src/server/db/models.ts`. O schema é aplicado somente por migrations, sem `sequelize.sync()`.
+As migrations versionadas em `database/migrations` criam `users`, `rooms`, `resources`, `room_resources` e `reservations`, com chaves estrangeiras e índices para consultas por sala, recurso e usuário. Salas possuem endereço e descrição obrigatórios e uma URL de imagem opcional. Recursos foram separados em tabelas relacionais para permitir filtros no banco. Migrations e seeders usam CommonJS, carregado diretamente pelo Sequelize CLI; os models da aplicação ficam em TypeScript strict em `src/server/db/models.ts`. O schema é aplicado somente por migrations, sem `sequelize.sync()`.
 
-O seed em `database/seeders` cria cinco salas, dois usuários `USER`, um `ADMIN`, quatro recursos e seus vínculos com as salas. Ele pode ser executado novamente sem duplicar esses dados.
+O seed em `database/seeders` cria cinco salas, dois usuários `USER`, um `ADMIN`, seis recursos e seus vínculos com as salas. Ele pode ser executado novamente sem duplicar dados nem sobrescrever endereço ou descrição já editados.
 
 Reservas têm usuário, sala, início e fim; a duração máxima por sala será adicionada na SALA-6. A forma de registrar cancelamentos será definida na SALA-3. A prevenção de sobreposição dependerá de validação e transação no servidor durante a SALA-2; SQLite não oferece uma constraint simples para intervalos de tempo sobrepostos.
 

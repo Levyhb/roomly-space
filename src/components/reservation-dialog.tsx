@@ -363,10 +363,10 @@ export function ReservationDialog({
             </Box>
             <Typography variant="caption" color="text.secondary">
               Duração permitida: 15 minutos a 4 horas.
-              <span style={{ color: "var(--color-accent)"}}>
+              <span style={{ color: "var(--color-accent)" }}>
                 {duration !== null && duration > 0
-                ? ` Selecionada: ${duration} minutos.`
-                : ""}
+                  ? ` Selecionada: ${duration} minutos.`
+                  : ""}
               </span>
             </Typography>
             {formError && <Alert severity="error">{formError}</Alert>}
@@ -393,7 +393,7 @@ export function ReservationDialog({
             color="secondary"
             disabled={submitting}
             sx={{ flex: 1, width: { xs: "100%", sm: "auto" } }}
-            style={{color: "white"}}
+            style={{ color: "white" }}
           >
             {submitting ? "Confirmando..." : "Confirmar reserva"}
           </Button>

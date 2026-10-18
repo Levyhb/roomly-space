@@ -13,6 +13,22 @@ export function validate<T extends z.ZodType>(
   return result.data;
 }
 
+export function searchParamsInput(
+  params: URLSearchParams,
+): Record<string, string | string[]> {
+  const input: Record<string, string | string[]> = Object.create(null);
+  for (const [key, value] of params) {
+    const current = input[key];
+    input[key] =
+      current === undefined
+        ? value
+        : Array.isArray(current)
+          ? [...current, value]
+          : [current, value];
+  }
+  return input;
+}
+
 export async function readJson(request: Request): Promise<unknown> {
   if (
     !request.headers

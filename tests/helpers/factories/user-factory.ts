@@ -1,4 +1,4 @@
-import type { SessionUser } from "@/components/home-shell";
+import type { SessionUser } from "@/types/session";
 
 export function makeSessionUser(
   overrides: Partial<SessionUser> = {},

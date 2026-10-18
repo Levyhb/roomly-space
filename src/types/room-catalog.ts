@@ -1,0 +1,23 @@
+export type RoomResource = { code: string; name: string };
+
+export type CatalogRoom = {
+  id: number;
+  name: string;
+  address: string;
+  description: string;
+  capacity: number;
+  imageUrl: string | null;
+  resources: RoomResource[];
+};
+
+export type RoomCatalogResponse = {
+  items: CatalogRoom[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};
+
+export type ResourceOptionsResponse = { items: RoomResource[] };

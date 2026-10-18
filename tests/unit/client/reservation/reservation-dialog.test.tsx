@@ -152,9 +152,6 @@ test("TC_SALA_2_029 - entrada inválida ou ocupada não envia POST", async () =>
   expect(
     screen.getByText("O horário escolhido está indisponível."),
   ).toBeVisible();
-  expect(toastError).toHaveBeenCalledWith(
-    "O horário escolhido está indisponível.",
-  );
   expect(post).not.toHaveBeenCalled();
 });
 

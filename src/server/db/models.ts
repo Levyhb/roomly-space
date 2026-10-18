@@ -141,6 +141,8 @@ export class Reservation extends Model<
   declare roomId: number;
   declare startsAt: Date;
   declare endsAt: Date;
+  declare canceledAt: CreationOptional<Date | null>;
+  declare room?: NonAttribute<Room>;
 }
 
 Reservation.init(
@@ -160,6 +162,9 @@ Reservation.init(
     },
     startsAt: { type: DataTypes.DATE, allowNull: false, field: "starts_at" },
     endsAt: { type: DataTypes.DATE, allowNull: false, field: "ends_at" },
+    canceledAt: { type: DataTypes.DATE, allowNull: true, field: "canceled_at" },
   },
   { sequelize, tableName: "reservations", timestamps: false },
 );
+
+Reservation.belongsTo(Room, { as: "room", foreignKey: "roomId" });

@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo.
+A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo. A primeira etapa da SALA-3 acrescenta API para listar e cancelar apenas as próprias reservas; a tela será implementada na etapa seguinte.
 
 ## Escopo previsto
 
@@ -36,6 +36,12 @@ O catálogo pode ser consultado sem sessão em `GET /api/rooms?q=&capacity=&reso
 O início precisa estar no futuro, entrada e saída devem ser no mesmo dia, em ordem crescente, e a duração deve ser de 15 a 240 minutos, inclusive. Intervalos adjacentes são aceitos; sobreposição retorna `409`. Data, horário ou duração inválidos retornam `400`; sessão ausente, `401`; sala inexistente, `404`. A consulta de disponibilidade informa a agenda atual, mas o `POST` verifica o conflito novamente dentro de uma transação SQLite `IMMEDIATE`. Contenção do SQLite também recebe resposta `409` controlada. As regras de dias úteis e 08h–20h pertencem ao hotfix SALA-5; a duração por sala pertence à SALA-6.
 
 No catálogo, “Reservar” consulta a sessão atual antes de abrir o diálogo. Sem usuário selecionado, a interface orienta a usar “Entrar como”. O modal permite escolher a data pelo calendário nativo, digitar entrada e saída em `HH:mm` e consultar os horários ocupados. A consulta tem loading, retry e cancelamento de respostas antigas; em `409`, os campos permanecem preenchidos e a disponibilidade é atualizada. Após `201`, o modal fecha e reabre com formulário limpo. Em telas móveis ele ocupa a tela inteira.
+
+### Minhas reservas (API)
+
+`GET /api/reservations?q=&status=active&page=1` exige sessão e retorna `{items, pagination}` com até 10 reservas por página. `status` aceita `active` (padrão), `completed` e `all`; reservas canceladas ficam fora de todos os filtros. A busca usa o nome da sala. Reservas em andamento e futuras aparecem por início crescente; concluídas, por fim decrescente. Em `all`, as ativas aparecem antes das concluídas; o ID desempata. O status `SCHEDULED`, `IN_PROGRESS` ou `COMPLETED` é calculado com o relógio do servidor. Cada item inclui os instantes UTC e `{id, name, address, capacity, imageUrl}` da sala.
+
+`PATCH /api/reservations/{reservationId}/cancel` cancela apenas uma reserva futura do usuário da sessão e responde `204` sem corpo. A requisição não aceita query nem body; o usuário vem exclusivamente da sessão. A migration aditiva `canceled_at` preserva o histórico; disponibilidade e verificação de sobreposição ignoram reservas canceladas, liberando o horário. Entrada inválida retorna `400`, ausência de sessão `401`, reserva inexistente ou alheia `404`, e reserva em andamento, concluída ou já cancelada `409`. A consulta e a atualização condicional ocorrem em transação SQLite `IMMEDIATE` para impedir dupla confirmação de cancelamento.
 
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 

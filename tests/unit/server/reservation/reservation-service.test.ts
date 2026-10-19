@@ -42,21 +42,21 @@ beforeEach(() => {
 test("TC_SALA_2_001 - disponibilidade pública contém só horários da sala e dia", async () => {
   inRange.mockResolvedValueOnce([
     {
-      startsAt: new Date("2030-10-20T13:00:00.000Z"),
-      endsAt: new Date("2030-10-20T14:00:00.000Z"),
+      startsAt: new Date("2030-10-21T13:00:00.000Z"),
+      endsAt: new Date("2030-10-21T14:00:00.000Z"),
       userId: 9,
     },
   ] as Awaited<ReturnType<typeof findReservationsInRange>>);
-  const result = await getRoomAvailability(1, "2030-10-20");
+  const result = await getRoomAvailability(1, "2030-10-21");
 
   expect(inRange).toHaveBeenCalledWith(
     1,
-    new Date("2030-10-20T03:00:00.000Z"),
     new Date("2030-10-21T03:00:00.000Z"),
+    new Date("2030-10-22T03:00:00.000Z"),
   );
   expect(result).toEqual({
     roomId: 1,
-    date: "2030-10-20",
+    date: "2030-10-21",
     timezone: "America/Sao_Paulo",
     unavailable: [{ startTime: "10:00", endTime: "11:00" }],
   });
@@ -69,24 +69,24 @@ test("TC_SALA_2_002 - persiste UTC e usa usuário recebido da sessão", async ()
   expect(transaction).toHaveBeenCalledTimes(1);
   expect(overlapping).toHaveBeenCalledWith(
     1,
-    new Date("2030-10-20T13:00:00.000Z"),
-    new Date("2030-10-20T14:00:00.000Z"),
+    new Date("2030-10-21T13:00:00.000Z"),
+    new Date("2030-10-21T14:00:00.000Z"),
     expect.anything(),
   );
   expect(insert).toHaveBeenCalledWith(
     {
       userId: 3,
       roomId: 1,
-      startsAt: new Date("2030-10-20T13:00:00.000Z"),
-      endsAt: new Date("2030-10-20T14:00:00.000Z"),
+      startsAt: new Date("2030-10-21T13:00:00.000Z"),
+      endsAt: new Date("2030-10-21T14:00:00.000Z"),
     },
     expect.anything(),
   );
   expect(result).toMatchObject({
     id: 7,
     roomId: 1,
-    startsAt: "2030-10-20T13:00:00.000Z",
-    endsAt: "2030-10-20T14:00:00.000Z",
+    startsAt: "2030-10-21T13:00:00.000Z",
+    endsAt: "2030-10-21T14:00:00.000Z",
   });
 });
 
@@ -160,8 +160,8 @@ test("TC_SALA_2_007 - conflito impede inserção e adjacência é aceita", async
 });
 
 test("TC_SALA_2_019 - rejeita todas as posições de sobreposição e aceita bordas", async () => {
-  const existingStart = new Date("2030-10-20T13:00:00.000Z").getTime();
-  const existingEnd = new Date("2030-10-20T14:00:00.000Z").getTime();
+  const existingStart = new Date("2030-10-21T13:00:00.000Z").getTime();
+  const existingEnd = new Date("2030-10-21T14:00:00.000Z").getTime();
   overlapping.mockImplementation(async (_, start, end) =>
     start.getTime() < existingEnd && end.getTime() > existingStart
       ? ({ id: 1 } as Awaited<ReturnType<typeof findOverlappingReservation>>)
@@ -196,24 +196,62 @@ test("TC_SALA_2_019 - rejeita todas as posições de sobreposição e aceita bor
   expect(insert).toHaveBeenCalledTimes(2);
 });
 
-test("TC_SALA_2_020 - aceita término às 23:59 e isola outra sala", async () => {
+test("TC_SALA_5_001 - aceita dias úteis e os limites 08:00 e 20:00", async () => {
+  for (const date of [
+    "2030-10-21",
+    "2030-10-22",
+    "2030-10-23",
+    "2030-10-24",
+    "2030-10-25",
+  ]) {
+    await createReservation(makeReservationInput({ date }), 3, fixedNow);
+  }
   await createReservation(
-    makeReservationInput({ roomId: 2, startTime: "23:44", endTime: "23:59" }),
+    makeReservationInput({ startTime: "08:00", endTime: "08:15" }),
     3,
     fixedNow,
   );
-  expect(overlapping).toHaveBeenCalledWith(
-    2,
-    expect.any(Date),
-    expect.any(Date),
-    expect.anything(),
+  await createReservation(
+    makeReservationInput({ startTime: "19:45", endTime: "20:00" }),
+    3,
+    fixedNow,
   );
-  expect(insert).toHaveBeenCalledTimes(1);
+  expect(insert).toHaveBeenCalledTimes(7);
+});
+
+test("TC_SALA_5_002 - rejeita sábado e domingo antes de consultar a sala", async () => {
+  for (const date of ["2030-10-20", "2030-10-26"]) {
+    await expect(
+      createReservation(makeReservationInput({ date }), 3, fixedNow),
+    ).rejects.toMatchObject({ status: 400, code: "NON_BUSINESS_DAY" });
+  }
+  expect(room).not.toHaveBeenCalled();
+  expect(insert).not.toHaveBeenCalled();
+});
+
+test("TC_SALA_5_003 - rejeita intervalos fora de 08:00 a 20:00", async () => {
+  for (const [startTime, endTime] of [
+    ["07:59", "08:15"],
+    ["19:45", "20:01"],
+  ]) {
+    await expect(
+      createReservation(
+        makeReservationInput({ startTime, endTime }),
+        3,
+        fixedNow,
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      code: "OUTSIDE_BUSINESS_HOURS",
+    });
+  }
+  expect(room).not.toHaveBeenCalled();
+  expect(insert).not.toHaveBeenCalled();
 });
 
 test("TC_SALA_2_021 - disponibilidade de sala inexistente responde 404", async () => {
   room.mockResolvedValueOnce(null);
-  await expect(getRoomAvailability(99, "2030-10-20")).rejects.toMatchObject({
+  await expect(getRoomAvailability(99, "2030-10-21")).rejects.toMatchObject({
     status: 404,
     code: "ROOM_NOT_FOUND",
   });

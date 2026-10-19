@@ -13,6 +13,18 @@ export function isValidDate(value: string): boolean {
   return dayjs(value, "YYYY-MM-DD", true).isValid();
 }
 
+export function isBusinessDay(date: string): boolean {
+  const weekday = dayjs(date, "YYYY-MM-DD", true).day();
+  return weekday >= 1 && weekday <= 5;
+}
+
+export function isWithinBusinessHours(
+  startTime: string,
+  endTime: string,
+): boolean {
+  return startTime >= "08:00" && endTime <= "20:00";
+}
+
 export function localDateTimeToUtc(date: string, time: string): Date {
   const local = `${date} ${time}`;
   const parsed = dayjs.tz(local, "YYYY-MM-DD HH:mm", BOOKING_TIMEZONE);

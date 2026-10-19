@@ -9,7 +9,7 @@ export function makeReservationInput(
 ): CreateReservationInput {
   return {
     roomId: 1,
-    date: "2030-10-20",
+    date: "2030-10-21",
     startTime: "10:00",
     endTime: "11:00",
     ...overrides,

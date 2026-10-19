@@ -1,13 +1,14 @@
 import {
   bookingDurationMinutes,
   bookingFormError,
+  isBookingBusinessDay,
   saoPauloNow,
 } from "@/components/reservation-form-utils";
 
-const now = new Date("2030-10-19T12:00:00.000Z");
+const now = new Date("2030-10-21T12:00:00.000Z");
 
 test("TC_SALA_2_023 - relógio de negócio usa data e hora de São Paulo", () => {
-  expect(saoPauloNow(now)).toEqual({ date: "2030-10-19", time: "09:00" });
+  expect(saoPauloNow(now)).toEqual({ date: "2030-10-21", time: "09:00" });
 });
 
 test("TC_SALA_2_024 - exige HH:mm, ordem e limites inclusivos", () => {
@@ -16,21 +17,23 @@ test("TC_SALA_2_024 - exige HH:mm, ordem e limites inclusivos", () => {
   for (const [start, end] of [
     ["10:00", "10:14"],
     ["10:00", "14:01"],
-    ["11:00", "10:00"],
   ]) {
-    expect(bookingFormError("2030-10-20", start, end, [], now)).toBe(
+    expect(bookingFormError("2030-10-21", start, end, [], now)).toBe(
       "A duração deve ser de 15 minutos a 4 horas.",
     );
   }
-  expect(bookingFormError("2030-10-20", "9:00", "10:00", [], now)).toBe(
+  expect(bookingFormError("2030-10-21", "11:00", "10:00", [], now)).toBe(
+    "O horário de saída deve ser maior que o horário de entrada.",
+  );
+  expect(bookingFormError("2030-10-21", "9:00", "10:00", [], now)).toBe(
     "Informe entrada e saída em HH:mm.",
   );
-  expect(bookingFormError("2030-10-20", "10:00", "10:15", [], now)).toBeNull();
-  expect(bookingFormError("2030-10-20", "10:00", "14:00", [], now)).toBeNull();
+  expect(bookingFormError("2030-10-21", "10:00", "10:15", [], now)).toBeNull();
+  expect(bookingFormError("2030-10-21", "10:00", "14:00", [], now)).toBeNull();
 });
 
 test("TC_SALA_2_025 - rejeita passado e intervalo ocupado, aceita adjacência", () => {
-  expect(bookingFormError("2030-10-19", "09:00", "10:00", [], now)).toBe(
+  expect(bookingFormError("2030-10-21", "09:00", "10:00", [], now)).toBe(
     "O início da reserva deve estar no futuro.",
   );
   expect(bookingFormError("2030-10-18", "10:00", "11:00", [], now)).toBe(
@@ -38,9 +41,29 @@ test("TC_SALA_2_025 - rejeita passado e intervalo ocupado, aceita adjacência", 
   );
   const unavailable = [{ startTime: "10:00", endTime: "11:00" }];
   expect(
-    bookingFormError("2030-10-20", "10:30", "11:30", unavailable, now),
+    bookingFormError("2030-10-21", "10:30", "11:30", unavailable, now),
   ).toBe("O horário escolhido está indisponível.");
   expect(
-    bookingFormError("2030-10-20", "11:00", "12:00", unavailable, now),
+    bookingFormError("2030-10-21", "11:00", "12:00", unavailable, now),
   ).toBeNull();
+});
+
+test("TC_SALA_5_004 - formulário valida dias úteis e horário de funcionamento", () => {
+  expect(isBookingBusinessDay("2030-10-21")).toBe(true);
+  expect(isBookingBusinessDay("2030-10-25")).toBe(true);
+  expect(isBookingBusinessDay("2030-10-20")).toBe(false);
+  expect(isBookingBusinessDay("2030-10-26")).toBe(false);
+  expect(bookingFormError("2030-10-20", "10:00", "11:00", [], now)).toBe(
+    "Reservas são permitidas somente de segunda a sexta-feira.",
+  );
+  for (const [startTime, endTime] of [
+    ["07:59", "08:15"],
+    ["19:45", "20:01"],
+  ]) {
+    expect(bookingFormError("2030-10-21", startTime, endTime, [], now)).toBe(
+      "Reservas são permitidas somente entre 08:00 e 20:00.",
+    );
+  }
+  expect(bookingFormError("2030-10-22", "08:00", "08:15", [], now)).toBeNull();
+  expect(bookingFormError("2030-10-22", "19:45", "20:00", [], now)).toBeNull();
 });

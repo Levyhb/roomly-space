@@ -69,6 +69,9 @@ test("TC_SALA_2_026 - diálogo mostra sala, recursos, data, horários e foco ini
   expect(screen.getByText("8 pessoas")).toBeVisible();
   expect(screen.getByText("Projetor")).toBeVisible();
   expect(
+    screen.getByText("Duração permitida: de 15 a 240 minutos."),
+  ).toBeVisible();
+  expect(
     screen.getByRole("heading", { name: "Registrar reserva" }),
   ).toBeVisible();
   expect(
@@ -219,6 +222,83 @@ test("TC_SALA_2_029 - entrada inválida ou ocupada não envia POST", async () =>
     screen.getByText("O horário escolhido está indisponível."),
   ).toBeVisible();
   expect(post).not.toHaveBeenCalled();
+});
+
+test("TC_SALA_6_005 - modal bloqueia duração acima do limite da sala", async () => {
+  render(
+    <ReservationDialog
+      room={makeRoom({ maxReservationDurationMinutes: 60 })}
+      onClose={jest.fn()}
+    />,
+  );
+  fillForm();
+  fireEvent.change(screen.getByLabelText(/Horário de saída/), {
+    target: { value: "11:01" },
+  });
+  await screen.findByText("Sem horários ocupados nesta data.");
+  await userEvent
+    .setup()
+    .click(screen.getByRole("button", { name: "Confirmar reserva" }));
+  expect(
+    screen.getByText("A duração máxima desta sala é de 60 minutos."),
+  ).toBeVisible();
+  expect(post).not.toHaveBeenCalled();
+});
+
+test("TC_SALA_6_007 - horário de saída inválido apresenta erro durante a digitação", async () => {
+  render(<ReservationDialog room={room} onClose={jest.fn()} />);
+  fireEvent.change(screen.getByLabelText(/Horário de entrada/), {
+    target: { value: "11:00" },
+  });
+  fireEvent.change(screen.getByLabelText(/Horário de saída/), {
+    target: { value: "10:00" },
+  });
+
+  const endTime = screen.getByLabelText(/Horário de saída/);
+  expect(endTime).toHaveAttribute("aria-invalid", "true");
+  expect(
+    screen.getByText(
+      "O horário de saída deve ser maior que o horário de entrada.",
+    ),
+  ).toBeVisible();
+
+  fireEvent.change(endTime, { target: { value: "12:00" } });
+  expect(endTime).toHaveAttribute("aria-invalid", "false");
+  expect(
+    screen.queryByText(
+      "O horário de saída deve ser maior que o horário de entrada.",
+    ),
+  ).not.toBeInTheDocument();
+});
+
+test("TC_SALA_6_006 - erro 400 do servidor preserva horários e mostra a regra", async () => {
+  post.mockRejectedValueOnce(
+    Object.assign(new Error("invalid duration"), {
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: {
+          error: {
+            message: "A duração máxima desta sala é de 60 minutos",
+          },
+        },
+      },
+    }),
+  );
+  render(<ReservationDialog room={room} onClose={jest.fn()} />);
+  fillForm();
+  await screen.findByText("Sem horários ocupados nesta data.");
+  await userEvent
+    .setup()
+    .click(screen.getByRole("button", { name: "Confirmar reserva" }));
+
+  await waitFor(() =>
+    expect(toastError).toHaveBeenCalledWith(
+      "A duração máxima desta sala é de 60 minutos",
+    ),
+  );
+  expect(screen.getByLabelText(/Horário de entrada/)).toHaveValue("10:00");
+  expect(screen.getByLabelText(/Horário de saída/)).toHaveValue("11:00");
 });
 
 test("TC_SALA_2_030 - conflito 409 preserva dados e atualiza disponibilidade", async () => {

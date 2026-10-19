@@ -34,6 +34,7 @@ function roomOutput(room: Room) {
     address: room.address,
     complement: room.complement,
     imageUrl: room.imageUrl,
+    maxReservationDurationMinutes: room.maxReservationDurationMinutes,
     resourceIds: (room.resources ?? [])
       .map((resource) => resource.id)
       .sort((a, b) => a - b),

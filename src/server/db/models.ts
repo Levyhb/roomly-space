@@ -61,6 +61,7 @@ export class Room extends Model<
   declare complement: CreationOptional<string | null>;
   declare description: string;
   declare imageUrl: CreationOptional<string | null>;
+  declare maxReservationDurationMinutes: CreationOptional<number>;
   declare resources?: NonAttribute<Resource[]>;
 }
 
@@ -77,6 +78,13 @@ Room.init(
     complement: { type: DataTypes.STRING(160), allowNull: true },
     description: { type: DataTypes.TEXT, allowNull: false },
     imageUrl: { type: DataTypes.TEXT, allowNull: true, field: "image_url" },
+    maxReservationDurationMinutes: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 240,
+      field: "max_reservation_duration_minutes",
+      validate: { min: 15 },
+    },
   },
   { sequelize, tableName: "rooms", timestamps: false },
 );

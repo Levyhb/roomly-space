@@ -27,7 +27,12 @@ import type { AdminRoom, AdminRoomInput } from "@/types/admin-room";
 import type { ResourceOptionsResponse } from "@/types/room-catalog";
 
 type Resource = ResourceOptionsResponse["items"][number];
-type Field = "name" | "description" | "capacity" | "address";
+type Field =
+  | "name"
+  | "description"
+  | "capacity"
+  | "maxReservationDurationMinutes"
+  | "address";
 
 export function AdminRoomDialog({
   open,
@@ -53,6 +58,8 @@ export function AdminRoomDialog({
   const [name, setName] = useState(room?.name ?? "");
   const [description, setDescription] = useState(room?.description ?? "");
   const [capacity, setCapacity] = useState(room ? String(room.capacity) : "");
+  const [maxReservationDurationMinutes, setMaxReservationDurationMinutes] =
+    useState(String(room?.maxReservationDurationMinutes ?? 240));
   const [address, setAddress] = useState(room?.address ?? "");
   const [complement, setComplement] = useState(room?.complement ?? "");
   const [resourceIds, setResourceIds] = useState<number[]>(
@@ -79,12 +86,22 @@ export function AdminRoomDialog({
     if (!/^[1-9]\d*$/.test(capacity) || !Number.isSafeInteger(capacityNumber)) {
       nextErrors.capacity = "Informe um número inteiro maior que zero.";
     }
+    const maxDurationNumber = Number(maxReservationDurationMinutes);
+    if (
+      !/^[1-9]\d*$/.test(maxReservationDurationMinutes) ||
+      !Number.isSafeInteger(maxDurationNumber) ||
+      maxDurationNumber < 15
+    ) {
+      nextErrors.maxReservationDurationMinutes =
+        "Informe um número inteiro igual ou superior a 15.";
+    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
     void onSubmit({
       name: name.trim(),
       description: description.trim(),
       capacity: capacityNumber,
+      maxReservationDurationMinutes: maxDurationNumber,
       address: address.trim(),
       complement: complement.trim() || null,
       resourceIds,
@@ -161,6 +178,22 @@ export function AdminRoomDialog({
               required
               type="number"
               slotProps={{ htmlInput: { min: 1, step: 1 } }}
+              fullWidth
+            />
+            <TextField
+              label="Duração máxima da reserva (minutos)"
+              value={maxReservationDurationMinutes}
+              onChange={(event) =>
+                setMaxReservationDurationMinutes(event.target.value)
+              }
+              error={Boolean(errors.maxReservationDurationMinutes)}
+              helperText={
+                errors.maxReservationDurationMinutes ??
+                "Tempo máximo permitido para uma reserva nesta sala. Mínimo de 15 minutos."
+              }
+              required
+              type="number"
+              slotProps={{ htmlInput: { min: 15, step: 1 } }}
               fullWidth
             />
             <TextField

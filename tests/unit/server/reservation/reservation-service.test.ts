@@ -28,7 +28,10 @@ const fixedNow = () => new Date("2030-10-19T12:00:00.000Z");
 
 beforeEach(() => {
   jest.clearAllMocks();
-  room.mockResolvedValue({ id: 1 } as Awaited<ReturnType<typeof findRoomById>>);
+  room.mockResolvedValue({
+    id: 1,
+    maxReservationDurationMinutes: 240,
+  } as Awaited<ReturnType<typeof findRoomById>>);
   inRange.mockResolvedValue([]);
   overlapping.mockResolvedValue(null);
   insert.mockResolvedValue({ id: 7, roomId: 1 } as Awaited<
@@ -104,14 +107,47 @@ test("TC_SALA_2_003 - aceita limites inclusivos de 15 e 240 minutos", async () =
   expect(insert).toHaveBeenCalledTimes(2);
 });
 
-test("TC_SALA_2_004 - rejeita 14 e 241 minutos antes de consultar banco", async () => {
-  for (const endTime of ["10:14", "14:01"]) {
-    await expect(
-      createReservation(makeReservationInput({ endTime }), 3, fixedNow),
-    ).rejects.toMatchObject({ status: 400, code: "INVALID_DURATION" });
-  }
+test("TC_SALA_2_004 - rejeita duração menor que 15 minutos antes de consultar banco", async () => {
+  await expect(
+    createReservation(makeReservationInput({ endTime: "10:14" }), 3, fixedNow),
+  ).rejects.toMatchObject({ status: 400, code: "INVALID_DURATION" });
   expect(room).not.toHaveBeenCalled();
   expect(insert).not.toHaveBeenCalled();
+});
+
+test("TC_SALA_6_001 - cada sala aplica sua própria duração máxima", async () => {
+  room
+    .mockResolvedValueOnce({
+      id: 1,
+      maxReservationDurationMinutes: 60,
+    } as Awaited<ReturnType<typeof findRoomById>>)
+    .mockResolvedValueOnce({
+      id: 2,
+      maxReservationDurationMinutes: 360,
+    } as Awaited<ReturnType<typeof findRoomById>>);
+
+  await expect(
+    createReservation(
+      makeReservationInput({ roomId: 1, endTime: "11:01" }),
+      3,
+      fixedNow,
+    ),
+  ).rejects.toMatchObject({
+    status: 400,
+    code: "INVALID_DURATION",
+    message: "A duração máxima desta sala é de 60 minutos",
+  });
+  await createReservation(
+    makeReservationInput({ roomId: 2, endTime: "15:00" }),
+    3,
+    fixedNow,
+  );
+
+  expect(insert).toHaveBeenCalledTimes(1);
+  expect(insert).toHaveBeenCalledWith(
+    expect.objectContaining({ roomId: 2 }),
+    expect.anything(),
+  );
 });
 
 test("TC_SALA_2_005 - rejeita início passado ou igual ao instante atual", async () => {

@@ -16,7 +16,7 @@ import {
   utcToLocalTime,
 } from "@/server/time/booking-time";
 
-function assertRoomExists(room: unknown): void {
+function assertRoomExists<T>(room: T | null): asserts room is T {
   if (!room) throw new ApiError(404, "ROOM_NOT_FOUND", "Sala não encontrada");
 }
 
@@ -67,11 +67,18 @@ export async function createReservation(
   }
 
   const minutes = (endsAt.getTime() - startsAt.getTime()) / 60_000;
-  if (minutes < 15 || minutes > 240) {
+  if (minutes <= 0) {
     throw new ApiError(
       400,
       "INVALID_DURATION",
-      "A duração deve ser de 15 a 240 minutos",
+      "O horário de saída deve ser maior que o horário de entrada",
+    );
+  }
+  if (minutes < 15) {
+    throw new ApiError(
+      400,
+      "INVALID_DURATION",
+      "A duração mínima é de 15 minutos",
     );
   }
   if (startsAt.getTime() <= now().getTime()) {
@@ -96,7 +103,15 @@ export async function createReservation(
     );
   }
 
-  assertRoomExists(await findRoomById(input.roomId));
+  const room = await findRoomById(input.roomId);
+  assertRoomExists(room);
+  if (minutes > room.maxReservationDurationMinutes) {
+    throw new ApiError(
+      400,
+      "INVALID_DURATION",
+      `A duração máxima desta sala é de ${room.maxReservationDurationMinutes} minutos`,
+    );
+  }
 
   try {
     const reservation = await withImmediateTransaction(async (transaction) => {

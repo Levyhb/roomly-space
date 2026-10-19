@@ -13,6 +13,7 @@ export const adminRoomInputSchema = z.strictObject({
   name: z.string().trim().min(1).max(120),
   description: z.string().trim().min(1),
   capacity: z.number().int().positive().safe(),
+  maxReservationDurationMinutes: z.number().int().min(15).safe(),
   address: z.string().trim().min(1).max(160),
   complement: z
     .string()

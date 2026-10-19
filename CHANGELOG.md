@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto serão registradas neste arquivo.
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não publicado]
+
+### Adicionado
+
+- Duração máxima configurável por sala, aplicada no cadastro, na edição e na validação de reservas.
+
 ## [1.0.1] - 2026-10-19
 
 ### Corrigido

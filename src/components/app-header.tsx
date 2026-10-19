@@ -20,7 +20,7 @@ import {
 import type { SelectChangeEvent } from "@mui/material/Select";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { api } from "@/services/api/client";
@@ -40,10 +40,14 @@ const navigation = [
 
 export function AppHeader({ users, initialUser }: AppHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState(initialUser);
   const [isSwitching, setIsSwitching] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const visibleNavigation = navigation.filter(
+    (item) => item.href !== "/admin" || currentUser?.role === "ADMIN",
+  );
 
   async function changeUser(event: SelectChangeEvent<string>) {
     const userId = Number(event.target.value);
@@ -51,16 +55,21 @@ export function AppHeader({ users, initialUser }: AppHeaderProps) {
     setError(null);
 
     try {
+      let nextUser: SessionUser | null;
       if (userId === 0) {
         await api.delete("/session");
-        setCurrentUser(null);
+        nextUser = null;
       } else {
         const response = await api.post<{ user: SessionUser }>("/session", {
           userId,
         });
-        setCurrentUser(response.data.user);
+        nextUser = response.data.user;
       }
+      setCurrentUser(nextUser);
       window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
+      if (pathname === "/admin" && nextUser?.role !== "ADMIN") {
+        router.replace("/");
+      }
     } catch {
       const message = "Não foi possível trocar de usuário. Tente novamente.";
       setError(message);
@@ -141,7 +150,7 @@ export function AppHeader({ users, initialUser }: AppHeaderProps) {
                 height: 82,
               }}
             >
-              {navigation.map((item) => {
+              {visibleNavigation.map((item) => {
                 const active = pathname === item.href;
                 return (
                   <Box
@@ -225,7 +234,7 @@ export function AppHeader({ users, initialUser }: AppHeaderProps) {
           sx={{ width: 270, pt: 2 }}
         >
           <List>
-            {navigation.map((item) => {
+            {visibleNavigation.map((item) => {
               const active = pathname === item.href;
               return (
                 <ListItemButton

@@ -9,6 +9,7 @@ import TvOutlinedIcon from "@mui/icons-material/TvOutlined";
 import ViewQuiltOutlinedIcon from "@mui/icons-material/ViewQuiltOutlined";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/material";
 import { RoomImage } from "@/components/room-image";
+import { roomAddress } from "@/components/room-address";
 import type { CatalogRoom } from "@/types/room-catalog";
 
 const resourceIcons: Record<string, typeof MeetingRoomOutlinedIcon> = {
@@ -47,7 +48,7 @@ export function RoomCard({
             {room.name}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {room.address}
+            {roomAddress(room)}
           </Typography>
         </Box>
         <Typography variant="body2">Até {room.capacity} pessoas</Typography>

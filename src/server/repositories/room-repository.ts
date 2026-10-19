@@ -66,7 +66,7 @@ export async function findRooms(search: RoomSearch) {
       {
         model: Resource,
         as: "resources",
-        attributes: ["code", "name"],
+        attributes: ["id", "code", "name"],
         through: { attributes: [] },
       },
     ],
@@ -81,7 +81,7 @@ export async function findRooms(search: RoomSearch) {
 
 export async function findResources() {
   return Resource.findAll({
-    attributes: ["code", "name"],
+    attributes: ["id", "code", "name"],
     order: [
       ["name", "ASC"],
       ["code", "ASC"],

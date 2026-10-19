@@ -31,6 +31,7 @@ import {
 } from "@/components/reservation-form-utils";
 import type { OccupiedInterval } from "@/components/reservation-form-utils";
 import { RoomImage } from "@/components/room-image";
+import { roomAddress } from "@/components/room-address";
 import { api } from "@/services/api/client";
 import type { CatalogRoom } from "@/types/room-catalog";
 
@@ -206,7 +207,7 @@ export function ReservationDialog({
                   sx={{ alignItems: "center" }}
                 >
                   <PlaceOutlinedIcon fontSize="small" aria-hidden="true" />
-                  <Typography variant="body2">{room.address}</Typography>
+                  <Typography variant="body2">{roomAddress(room)}</Typography>
                 </Stack>
                 <Stack
                   direction="row"

@@ -123,7 +123,14 @@ export async function findOwnReservations(search: OwnReservationSearch) {
       {
         model: Room,
         as: "room",
-        attributes: ["id", "name", "address", "capacity", "imageUrl"],
+        attributes: [
+          "id",
+          "name",
+          "address",
+          "complement",
+          "capacity",
+          "imageUrl",
+        ],
         required: true,
       },
     ],

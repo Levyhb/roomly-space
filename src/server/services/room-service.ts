@@ -29,6 +29,7 @@ export async function getRoomCatalog(query: RoomQuery) {
       id: room.id,
       name: room.name,
       address: room.address,
+      complement: room.complement,
       description: room.description,
       capacity: room.capacity,
       imageUrl: room.imageUrl,
@@ -49,6 +50,7 @@ export async function getResourceOptions() {
   const resources = await findResources();
   return {
     items: resources.map((resource) => ({
+      id: resource.id,
       code: resource.code,
       name: resource.name,
     })),

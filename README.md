@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo. A SALA-3 acrescenta a tela para consultar e cancelar apenas as próprias reservas.
+A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo. A SALA-3 acrescenta a tela para consultar e cancelar apenas as próprias reservas. A primeira etapa da SALA-4 fornece a API administrativa; a interface ainda está pendente.
 
 ## Escopo previsto
 
@@ -44,6 +44,14 @@ No catálogo, “Reservar” consulta a sessão atual antes de abrir o diálogo.
 `PATCH /api/reservations/{reservationId}/cancel` cancela apenas uma reserva futura do usuário da sessão e responde `204` sem corpo. A requisição não aceita query nem body; o usuário vem exclusivamente da sessão. A migration aditiva `canceled_at` preserva o histórico; disponibilidade e verificação de sobreposição ignoram reservas canceladas, liberando o horário. Entrada inválida retorna `400`, ausência de sessão `401`, reserva inexistente ou alheia `404`, e reserva em andamento, concluída ou já cancelada `409`. A consulta e a atualização condicional ocorrem em transação SQLite `IMMEDIATE` para impedir dupla confirmação de cancelamento.
 
 A rota `/my-reservations` mantém busca `q`, situação `status` e página `page` na URL. Os cards exibem sala, data e horários no fuso de São Paulo e o status calculado pelo servidor. O diálogo de detalhes mostra dados somente para leitura; reservas agendadas oferecem cancelamento em um segundo diálogo de confirmação. Após `204`, a tela atualiza a lista e normaliza uma página que ficou vazia. A troca de usuário no cabeçalho recarrega a listagem; sem sessão, a tela orienta a usar “Entrar como”.
+
+### Administração de salas (API)
+
+`GET /api/admin/rooms?q=&capacity=&resource=&page=` usa os mesmos filtros do catálogo, ordena por nome e ID e retorna `{items, pagination}` com 10 salas por página. Cada item inclui `resourceIds` para preencher o formulário de edição. `GET /api/resources` fornece `id`, `code` e `name` para o multiselect. Os contratos públicos de sala incluem `complement`, exibido após o endereço quando preenchido.
+
+`POST /api/admin/rooms` e `PATCH /api/admin/rooms/{roomId}` recebem JSON com `name`, `description`, `capacity`, `address`, `complement` opcional e `resourceIds` (array que pode ser vazio). O formulário de edição envia o conjunto completo de campos permitidos. Nome, descrição e endereço não podem ficar em branco; capacidade deve ser inteiro positivo. IDs de recursos devem ser distintos e existir no banco. Campos extras no body, inclusive `imageUrl`, `role` e `userId`, ou qualquer parâmetro de query recebem `400`. O cadastro retorna `201` com `{room}`; a edição retorna `200` com `{room}`. Sala inexistente retorna `404` e nome duplicado, sem diferenciar maiúsculas/minúsculas, retorna `409`.
+
+Todos os três métodos chamam `requireAdmin()` no servidor: sem sessão retornam `401` e com usuário comum retornam `403`. A criação e a edição ocorrem em transação SQLite `IMMEDIATE`, incluindo validação de nome/recursos e substituição dos vínculos. A migration acrescenta `complement` nulo às salas existentes e um índice único para `lower(name)`; como o `lower` nativo do SQLite cobre principalmente ASCII, a validação transacional da aplicação também compara nomes com acentos. Novas salas recebem `imageUrl: null` e mostram o fallback local; a edição preserva qualquer imagem existente. Um upload futuro exigiria salvar o arquivo em armazenamento local e gravar seu caminho em `image_url`. Na AWS, o arquivo iria ao S3; a aplicação gravaria a chave/URL e serviria o objeto por acesso controlado ou CloudFront.
 
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 
@@ -105,7 +113,7 @@ Na página inicial, o seletor “entrar como” usa os usuários do seed lidos n
 
 ## Dados de exemplo e modelagem
 
-As migrations versionadas em `database/migrations` criam `users`, `rooms`, `resources`, `room_resources` e `reservations`, com chaves estrangeiras e índices para consultas por sala, recurso e usuário. Salas possuem endereço e descrição obrigatórios e uma URL de imagem opcional. Recursos foram separados em tabelas relacionais para permitir filtros no banco. Migrations e seeders usam CommonJS, carregado diretamente pelo Sequelize CLI; os models da aplicação ficam em TypeScript strict em `src/server/db/models.ts`. O schema é aplicado somente por migrations, sem `sequelize.sync()`.
+As migrations versionadas em `database/migrations` criam `users`, `rooms`, `resources`, `room_resources` e `reservations`, com chaves estrangeiras e índices para consultas por sala, recurso e usuário. Salas possuem endereço e descrição obrigatórios, complemento e URL de imagem opcionais. Recursos foram separados em tabelas relacionais para permitir filtros no banco. Migrations e seeders usam CommonJS, carregado diretamente pelo Sequelize CLI; os models da aplicação ficam em TypeScript strict em `src/server/db/models.ts`. O schema é aplicado somente por migrations, sem `sequelize.sync()`.
 
 O seed em `database/seeders` cria cinco salas, dois usuários `USER`, um `ADMIN`, seis recursos e seus vínculos com as salas. Ele pode ser executado novamente sem duplicar dados nem sobrescrever endereço ou descrição já editados.
 

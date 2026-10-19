@@ -4,6 +4,7 @@ export type CatalogRoom = {
   id: number;
   name: string;
   address: string;
+  complement?: string | null;
   description: string;
   capacity: number;
   imageUrl: string | null;
@@ -20,4 +21,6 @@ export type RoomCatalogResponse = {
   };
 };
 
-export type ResourceOptionsResponse = { items: RoomResource[] };
+export type ResourceOptionsResponse = {
+  items: (RoomResource & { id: number })[];
+};

@@ -8,6 +8,7 @@ export type CatalogRoom = {
   description: string;
   capacity: number;
   imageUrl: string | null;
+  maxReservationDurationMinutes: number;
   resources: RoomResource[];
 };
 

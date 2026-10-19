@@ -9,6 +9,7 @@ const input = {
   name: "Sala Nova",
   description: "Descrição",
   capacity: 8,
+  maxReservationDurationMinutes: 240,
   address: "Torre A",
   complement: null,
   resourceIds: [1, 3],
@@ -24,11 +25,19 @@ test("TC_SALA_4_014 - criação usa imagem nula e edição não altera imagem", 
   await insertAdminRoom(input, transaction);
   await updateAdminRoom(room, input, transaction);
   expect(create).toHaveBeenCalledWith(
-    expect.objectContaining({ imageUrl: null, complement: null }),
+    expect.objectContaining({
+      imageUrl: null,
+      complement: null,
+      maxReservationDurationMinutes: 240,
+    }),
     { transaction },
   );
   expect(update).toHaveBeenCalledWith(expect.anything(), { transaction });
   expect(update.mock.calls[0][0]).not.toHaveProperty("imageUrl");
+  expect(update.mock.calls[0][0]).toHaveProperty(
+    "maxReservationDurationMinutes",
+    240,
+  );
 });
 
 test("TC_SALA_4_015 - troca de recursos remove antigos e cria apenas os escolhidos na mesma transação", async () => {

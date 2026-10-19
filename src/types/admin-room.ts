@@ -6,6 +6,7 @@ export type AdminRoom = {
   address: string;
   complement: string | null;
   imageUrl: string | null;
+  maxReservationDurationMinutes: number;
   resourceIds: number[];
 };
 

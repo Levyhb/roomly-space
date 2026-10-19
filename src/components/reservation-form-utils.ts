@@ -41,6 +41,7 @@ export function bookingFormError(
   startTime: string,
   endTime: string,
   unavailable: OccupiedInterval[],
+  maxDurationMinutes: number,
   now = new Date(),
 ): string | null {
   if (
@@ -52,8 +53,11 @@ export function bookingFormError(
   }
   const duration = bookingDurationMinutes(startTime, endTime);
   if (duration === null) return "Informe entrada e saída em HH:mm.";
-  if (duration < 15 || duration > 240)
-    return "A duração deve ser de 15 minutos a 4 horas.";
+  if (duration <= 0)
+    return "O horário de saída deve ser maior que o horário de entrada.";
+  if (duration < 15) return "A duração mínima é de 15 minutos.";
+  if (duration > maxDurationMinutes)
+    return `A duração máxima desta sala é de ${maxDurationMinutes} minutos.`;
 
   const current = saoPauloNow(now);
   if (

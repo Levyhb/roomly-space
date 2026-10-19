@@ -115,6 +115,32 @@ test("TC_SALA_1_008 - lista recursos públicos do banco", async () => {
   });
 });
 
+test("TC_SALA_6_002 - catálogo expõe a duração máxima configurada na sala", async () => {
+  mockedFindRooms.mockResolvedValueOnce({
+    count: 1,
+    rows: [
+      {
+        id: 1,
+        name: "Ipê",
+        address: "Torre A",
+        complement: null,
+        description: "Sala compacta",
+        capacity: 4,
+        imageUrl: null,
+        maxReservationDurationMinutes: 60,
+        resources: [],
+      },
+    ],
+  } as unknown as Awaited<ReturnType<typeof findRooms>>);
+
+  const response = await getRoomCatalog({ page: 1 });
+
+  expect(response.items[0]).toMatchObject({
+    id: 1,
+    maxReservationDurationMinutes: 60,
+  });
+});
+
 test("TC_SALA_1_012 - recebe caracteres especiais da busca como texto", async () => {
   const response = await getRooms(
     new Request("http://localhost/api/rooms?q=%25_%5C"),

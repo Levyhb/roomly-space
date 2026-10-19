@@ -42,6 +42,7 @@ const input = {
   name: "Sala Nova",
   description: "Descrição",
   capacity: 8,
+  maxReservationDurationMinutes: 240,
   address: "Torre A",
   complement: "Sala 5",
   resourceIds: [1, 3],

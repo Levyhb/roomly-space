@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { RoomCatalog } from "@/components/room-catalog";
 import { api } from "@/services/api/client";
 import { toast } from "react-toastify";
-import { makeCatalog, makeRoom } from "../../helpers/factories/room-factory";
+import { makeCatalog, makeRoom } from "../../../helpers/factories/room-factory";
 
 let mockSearch = new URLSearchParams();
 const mockPush = jest.fn();

@@ -10,6 +10,7 @@ export function makeAdminRoom(overrides: Partial<AdminRoom> = {}): AdminRoom {
     address: "Torre A",
     complement: "Sala 5",
     imageUrl: null,
+    maxReservationDurationMinutes: 240,
     resourceIds: [1],
     ...overrides,
   };

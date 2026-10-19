@@ -269,6 +269,7 @@ test("TC_SALA_4_024 - cadastro envia apenas campos permitidos, bloqueia envio du
     name: "Sala Nova",
     description: "Descrição da sala",
     capacity: 8,
+    maxReservationDurationMinutes: 240,
     address: "Torre B",
     complement: "Sala 7",
     resourceIds: [],

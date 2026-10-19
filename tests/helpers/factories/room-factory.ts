@@ -8,6 +8,7 @@ export function makeRoom(overrides: Partial<CatalogRoom> = {}): CatalogRoom {
     description: "Espaço para reuniões de equipe.",
     capacity: 8,
     imageUrl: null,
+    maxReservationDurationMinutes: 240,
     resources: [{ code: "projector", name: "Projetor" }],
     ...overrides,
   };

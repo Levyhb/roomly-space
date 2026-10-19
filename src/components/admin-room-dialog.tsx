@@ -85,6 +85,7 @@ export function AdminRoomDialog({
       name: name.trim(),
       description: description.trim(),
       capacity: capacityNumber,
+      maxReservationDurationMinutes: room?.maxReservationDurationMinutes ?? 240,
       address: address.trim(),
       complement: complement.trim() || null,
       resourceIds,

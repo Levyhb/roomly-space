@@ -131,8 +131,69 @@ O hotfix SALA-5 partiu de `main` na versão 1.0.0, onde a duração máxima aind
 
 Os conflitos em `reservation-form-utils` e no diálogo de reserva foram resolvidos preservando o parâmetro `maxReservationDurationMinutes` da SALA-6 e as validações visuais e de horário da SALA-5. Os testes conflitantes passaram a fornecer o limite da sala e usam datas futuras em dias úteis. README e CHANGELOG mantêm tanto o registro do hotfix 1.0.1 quanto a funcionalidade publicada na versão 1.1.0. O serviço do servidor também foi conferido para garantir que ele aplique o horário de funcionamento antes de comparar a duração com o limite da sala.
 
-## Limites e pendências
+## Tempo de desenvolvimento
 
-Swagger/OpenAPI, Docker, exclusão de salas e o desenho detalhado da arquitetura AWS serão avaliados depois dos requisitos obrigatórios. A proposta AWS será escrita após a aplicação estar completa para considerar com precisão execução, banco, arquivos estáticos, possível uso de S3, segredos e separação dos ambientes. Ao atingir aproximadamente oito horas de implementação, o trabalho será interrompido e o que faltar será registrado aqui.
+| Etapa                    | Tempo aproximado |
+| ------------------------ | ---------------- |
+| Setup inicial            | 2h20             |
+| SALA-1 — Salas           | 1h26             |
+| SALA-2 — Reservar        | 1h05             |
+| SALA-3 — Minhas reservas | 1h04             |
+| SALA-4 — Administração   | 57 min           |
+| Release                  | 12 min           |
+| SALA-6 — Duração máxima  | 25 min           |
+| SALA-5 — Dias e horários | 24 min           |
+| Hotfix                   | 11 min           |
+
+**Tempo total consolidado: 7h55.** Os tempos individuais foram registrados de forma aproximada e arredondada; por isso, sua soma direta apresenta uma pequena diferença em relação ao total consolidado do acompanhamento.
+
+## Arquitetura proposta na AWS
+
+A aplicação Next.js seria empacotada em uma imagem Docker armazenada no ECR e executada em um serviço ECS com Fargate, atrás de um Application Load Balancer; essa combinação suporta tráfego HTTP/HTTPS para serviços ECS. O SQLite seria substituído por PostgreSQL no Amazon RDS dentro de sub-redes privadas. Credenciais do banco e demais segredos ficariam no Secrets Manager, que possui integração com o RDS para armazenamento e rotação das credenciais. Imagens das salas seriam enviadas diretamente ao S3 por URLs pré-assinadas de curta duração, e a aplicação armazenaria somente a chave do objeto. Teste e produção teriam serviços ECS, bancos, buckets e segredos independentes, preferencialmente em contas AWS separadas. O GitHub Actions autenticaria por OIDC, executaria os mesmos checks da CI, publicaria a imagem no ECR e aplicaria migrations antes de atualizar o serviço de cada ambiente. Referências: [load balancing no ECS](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html), [RDS com Secrets Manager](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html) e [uploads ao S3 com URL pré-assinada](https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html).
+
+```mermaid
+flowchart LR
+    Actions[GitHub Actions via OIDC] --> ECR[ECR]
+    User[Usuário] --> ALB
+
+    subgraph Teste
+        TestECS[Next.js no ECS Fargate] --> TestRDS[(RDS PostgreSQL)]
+        TestECS --> TestSecrets[Secrets Manager]
+        TestECS --> TestS3[(S3)]
+    end
+
+    subgraph Produção
+        ALB[Application Load Balancer] --> ProdECS[Next.js no ECS Fargate]
+        ProdECS --> ProdRDS[(RDS PostgreSQL)]
+        ProdECS --> ProdSecrets[Secrets Manager]
+        ProdECS --> ProdS3[(S3 - imagens)]
+    end
+
+    ECR --> TestECS
+    ECR --> ProdECS
+    User -->|URL pré-assinada| ProdS3
+```
+
+## Limitações técnicas conhecidas
 
 `npm audit --omit=dev` aponta duas ocorrências moderadas na dependência transitiva `uuid` usada pelo Sequelize v6. Os IDs deste projeto são inteiros; a versão estável escolhida será mantida nesta etapa porque não há correção automática segura. Reavaliar a dependência antes de produção.
+
+## Funcionalidades não implementadas
+
+O desenvolvimento foi limitado ao período de 6 a 8 horas proposto pelo desafio. As funcionalidades obrigatórias foram priorizadas e os seguintes itens ficaram como evolução:
+
+### Remoção de salas no Admin
+
+O menu de ações apresenta a opção **Remover**, mas ela permanece desabilitada. Antes da implementação seria necessário definir como preservar o histórico das reservas associadas. A abordagem prevista é uma exclusão lógica, com um campo como `deletedAt` ou `active`, impedindo novas reservas sem remover os registros históricos.
+
+### Swagger/OpenAPI
+
+Gostaria de ter documentado os endpoints com Swagger/OpenAPI, incluindo contratos, parâmetros, respostas e exemplos. Como essa configuração não fazia parte dos requisitos obrigatórios, ela não foi implementada para manter o esforço dentro do prazo do desafio.
+
+### Upload de imagens
+
+O cadastro e a edição de salas exibem o campo de imagem desabilitado, e salas sem imagem utilizam um arquivo padrão. Não houve tempo para implementar o envio e a validação dos arquivos. Em produção, o fluxo previsto enviaria a imagem para um bucket S3, preferencialmente por uma URL pré-assinada, e armazenaria no banco apenas a chave ou URL do objeto. A entrega também exigiria definir limites de tamanho, formatos aceitos, permissões e remoção de arquivos substituídos.
+
+### Autenticação completa
+
+O desafio dispensava login real, então foi utilizado o seletor “Entrar como” com usuários do seed e autorização verificada no servidor. Uma evolução incluiria telas de login, cadastro e recuperação de senha, senhas protegidas por hash seguro e tokens JWT com expiração. Os tokens seriam transportados por cookies `HttpOnly`, `Secure` e `SameSite`, evitando sua exposição no `localStorage`. A recuperação de senha também exigiria tokens temporários de uso único e integração com um serviço de e-mail.

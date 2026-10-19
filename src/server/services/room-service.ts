@@ -33,6 +33,7 @@ export async function getRoomCatalog(query: RoomQuery) {
       description: room.description,
       capacity: room.capacity,
       imageUrl: room.imageUrl,
+      maxReservationDurationMinutes: room.maxReservationDurationMinutes,
       resources: (room.resources ?? [])
         .map((resource) => ({ code: resource.code, name: resource.name }))
         .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),

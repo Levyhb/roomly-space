@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto serão registradas neste arquivo.
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.1.0] - 2026-10-19
+
+### Adicionado
+
+- Duração máxima configurável por sala, aplicada no cadastro, na edição e na validação de reservas.
+
 ## [1.0.1] - 2026-10-19
 
 ### Corrigido
@@ -27,3 +33,4 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 [1.0.0]: https://github.com/Levyhb/roomly-space/releases/tag/v1.0.0
 [1.0.1]: https://github.com/Levyhb/roomly-space/compare/v1.0.0...v1.0.1
+[1.1.0]: https://github.com/Levyhb/roomly-space/compare/v1.0.1...v1.1.0

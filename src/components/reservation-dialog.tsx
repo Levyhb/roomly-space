@@ -128,6 +128,7 @@ export function ReservationDialog({
       startTime,
       endTime,
       availability?.unavailable ?? [],
+      room.maxReservationDurationMinutes,
     );
     if (message) {
       setFormError(message);
@@ -156,7 +157,7 @@ export function ReservationDialog({
         toast.error(
           typeof message === "string"
             ? message
-            : "A reserva não atende às regras de funcionamento.",
+            : "A reserva não atende às regras da sala.",
         );
       } else if (axios.isAxiosError(error) && error.response?.status === 401) {
         toast.error("Sessão encerrada. Entre como um usuário para reservar.");
@@ -399,7 +400,8 @@ export function ReservationDialog({
               />
             </Box>
             <Typography variant="caption" color="text.secondary">
-              Duração permitida: 15 minutos a 4 horas.
+              Duração permitida: de 15 a {room.maxReservationDurationMinutes}{" "}
+              minutos.
               <span style={{ color: "var(--color-accent)" }}>
                 {duration !== null && duration > 0
                   ? ` Selecionada: ${duration} minutos.`

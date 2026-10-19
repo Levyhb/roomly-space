@@ -200,6 +200,9 @@ test("TC_SALA_4_022 - menu permite editar e mantém remover desabilitado", async
   expect(within(dialog).getByLabelText(/Nome da sala/)).toHaveValue("Ipê");
   expect(within(dialog).getByLabelText(/Endereço/)).toHaveValue("Torre A");
   expect(within(dialog).getByLabelText(/Complemento/)).toHaveValue("Sala 5");
+  expect(
+    within(dialog).getByLabelText(/Duração máxima da reserva/),
+  ).toHaveValue(240);
   await userEvent
     .setup()
     .click(within(dialog).getByRole("button", { name: "Cancelar" }));
@@ -232,6 +235,27 @@ test("TC_SALA_4_023 - formulário valida campos e imagem permanece desabilitada"
   expect(post).not.toHaveBeenCalled();
 });
 
+test("TC_SALA_6_004 - formulário administrativo rejeita duração menor que 15", async () => {
+  render(<AdminRooms />);
+  await screen.findByText("Ipê");
+  await userEvent
+    .setup()
+    .click(screen.getByRole("button", { name: "Nova sala" }));
+  const dialog = screen.getByRole("dialog", { name: "Nova sala" });
+  fireEvent.change(within(dialog).getByLabelText(/Duração máxima da reserva/), {
+    target: { value: "14" },
+  });
+  await userEvent
+    .setup()
+    .click(within(dialog).getByRole("button", { name: "Salvar sala" }));
+  expect(
+    within(dialog).getByText(
+      "Informe um número inteiro igual ou superior a 15.",
+    ),
+  ).toBeVisible();
+  expect(post).not.toHaveBeenCalled();
+});
+
 test("TC_SALA_4_024 - cadastro envia apenas campos permitidos, bloqueia envio duplo e refaz lista", async () => {
   let finish!: (value: unknown) => void;
   post.mockImplementation(
@@ -254,6 +278,9 @@ test("TC_SALA_4_024 - cadastro envia apenas campos permitidos, bloqueia envio du
   fireEvent.change(within(dialog).getByLabelText(/Capacidade/), {
     target: { value: "8" },
   });
+  fireEvent.change(within(dialog).getByLabelText(/Duração máxima da reserva/), {
+    target: { value: "360" },
+  });
   fireEvent.change(within(dialog).getByLabelText(/Endereço/), {
     target: { value: "Torre B" },
   });
@@ -269,6 +296,7 @@ test("TC_SALA_4_024 - cadastro envia apenas campos permitidos, bloqueia envio du
     name: "Sala Nova",
     description: "Descrição da sala",
     capacity: 8,
+    maxReservationDurationMinutes: 360,
     address: "Torre B",
     complement: "Sala 7",
     resourceIds: [],
@@ -309,6 +337,9 @@ test("TC_SALA_4_025 - edição preserva dados em 409 e PATCH não envia imagem",
   fireEvent.change(within(dialog).getByLabelText(/Nome da sala/), {
     target: { value: "Sala editada" },
   });
+  fireEvent.change(within(dialog).getByLabelText(/Duração máxima da reserva/), {
+    target: { value: "90" },
+  });
   await userEvent
     .setup()
     .click(within(dialog).getByRole("button", { name: "Salvar sala" }));
@@ -320,10 +351,14 @@ test("TC_SALA_4_025 - edição preserva dados em 409 e PATCH não envia imagem",
   expect(within(dialog).getByLabelText(/Nome da sala/)).toHaveValue(
     "Sala editada",
   );
+  expect(
+    within(dialog).getByLabelText(/Duração máxima da reserva/),
+  ).toHaveValue(90);
   expect(patch).toHaveBeenCalledWith(
     "/admin/rooms/1",
-    expect.not.objectContaining({ imageUrl: expect.anything() }),
+    expect.objectContaining({ maxReservationDurationMinutes: 90 }),
   );
+  expect(patch.mock.calls[0][1]).not.toHaveProperty("imageUrl");
   await userEvent
     .setup()
     .click(within(dialog).getByRole("button", { name: "Salvar sala" }));

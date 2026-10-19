@@ -32,6 +32,7 @@ export async function listOwnReservations(
           id: room.id,
           name: room.name,
           address: room.address,
+          complement: room.complement,
           capacity: room.capacity,
           imageUrl: room.imageUrl,
         },

@@ -23,6 +23,7 @@ import {
   reservationTime,
 } from "@/components/reservation-display";
 import { RoomImage } from "@/components/room-image";
+import { roomAddress } from "@/components/room-address";
 import type { OwnReservation } from "@/types/own-reservation";
 
 const readOnlyFieldSx = {
@@ -98,7 +99,7 @@ export function MyReservationDialog({
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
               <PlaceOutlinedIcon fontSize="small" aria-hidden="true" />
               <Typography variant="body2">
-                {reservation.room.address}
+                {roomAddress(reservation.room)}
               </Typography>
             </Stack>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>

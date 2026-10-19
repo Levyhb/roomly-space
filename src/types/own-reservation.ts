@@ -9,6 +9,7 @@ export type OwnReservation = {
     id: number;
     name: string;
     address: string;
+    complement?: string | null;
     capacity: number;
     imageUrl: string | null;
   };

@@ -10,7 +10,10 @@ import { makeSessionUser } from "../../helpers/factories/user-factory";
 jest.mock("@/services/api/client", () => ({
   api: { post: jest.fn(), delete: jest.fn() },
 }));
-jest.mock("next/navigation", () => ({ usePathname: () => "/" }));
+jest.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ replace: jest.fn() }),
+}));
 jest.mock("react-toastify", () => ({ toast: { error: jest.fn() } }));
 
 const mockedPost = jest.mocked(api.post);

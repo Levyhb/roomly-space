@@ -5,7 +5,10 @@ import userEvent from "@testing-library/user-event";
 import { AppHeader } from "@/components/app-header";
 import { makeSessionUser } from "../../helpers/factories/user-factory";
 
-jest.mock("next/navigation", () => ({ usePathname: () => "/" }));
+jest.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ replace: jest.fn() }),
+}));
 jest.mock("@/services/api/client", () => ({
   api: { post: jest.fn(), delete: jest.fn() },
 }));
@@ -27,7 +30,7 @@ test("TC_SALA_1_015 - abre e fecha o menu móvel com Escape", async () => {
   );
 });
 
-test("TC_SALA_1_016 - mostra os três links e indica a rota ativa", async () => {
+test("TC_SALA_1_016 - mostra links públicos e indica a rota ativa", async () => {
   render(<AppHeader users={[makeSessionUser()]} initialUser={null} />);
 
   const desktopNavigation = screen.getByRole("navigation", {
@@ -50,6 +53,6 @@ test("TC_SALA_1_016 - mostra os três links e indica a rota ativa", async () => 
     within(mobileNavigation).getByRole("link", { name: "Minhas reservas" }),
   ).toHaveAttribute("href", "/my-reservations");
   expect(
-    within(mobileNavigation).getByRole("link", { name: "Admin" }),
-  ).toHaveAttribute("href", "/admin");
+    within(mobileNavigation).queryByRole("link", { name: "Admin" }),
+  ).not.toBeInTheDocument();
 });

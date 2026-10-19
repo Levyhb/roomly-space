@@ -2,7 +2,7 @@
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import { RoomCard } from "@/components/room-card";
-import { makeRoom } from "../../helpers/factories/room-factory";
+import { makeRoom } from "../../../helpers/factories/room-factory";
 
 test("TC_SALA_1_018 - card mostra dados e fallback sem liberar reserva", () => {
   render(<RoomCard room={makeRoom()} />);

@@ -104,14 +104,14 @@ test("TC_SALA_1_007 - permite consultar salas sem sessão", async () => {
 
 test("TC_SALA_1_008 - lista recursos públicos do banco", async () => {
   mockedFindResources.mockResolvedValueOnce([
-    { code: "projector", name: "Projetor" },
+    { id: 1, code: "projector", name: "Projetor" },
   ] as Awaited<ReturnType<typeof findResources>>);
 
   const response = await getResources();
 
   expect(response.status).toBe(200);
   expect(await response.json()).toEqual({
-    items: [{ code: "projector", name: "Projetor" }],
+    items: [{ id: 1, code: "projector", name: "Projetor" }],
   });
 });
 

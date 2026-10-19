@@ -19,6 +19,7 @@ import {
   reservationTime,
 } from "@/components/reservation-display";
 import { RoomImage } from "@/components/room-image";
+import { roomAddress } from "@/components/room-address";
 import type { OwnReservation } from "@/types/own-reservation";
 
 const statusColor = {
@@ -71,7 +72,7 @@ export function MyReservationCard({
         >
           <PlaceOutlinedIcon fontSize="small" aria-hidden="true" />
           <Typography variant="body2" color="text.secondary">
-            {reservation.room.address}
+            {roomAddress(reservation.room)}
           </Typography>
         </Stack>
         <Stack

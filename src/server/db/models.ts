@@ -58,6 +58,7 @@ export class Room extends Model<
   declare name: string;
   declare capacity: number;
   declare address: string;
+  declare complement: CreationOptional<string | null>;
   declare description: string;
   declare imageUrl: CreationOptional<string | null>;
   declare resources?: NonAttribute<Resource[]>;
@@ -73,6 +74,7 @@ Room.init(
       validate: { min: 1 },
     },
     address: { type: DataTypes.STRING(160), allowNull: false },
+    complement: { type: DataTypes.STRING(160), allowNull: true },
     description: { type: DataTypes.TEXT, allowNull: false },
     imageUrl: { type: DataTypes.TEXT, allowNull: true, field: "image_url" },
   },

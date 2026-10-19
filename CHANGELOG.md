@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Duração máxima configurável por sala, aplicada no cadastro, na edição e na validação de reservas.
 
+## [1.0.1] - 2026-10-19
+
+### Corrigido
+
+- Reservas agora são aceitas somente de segunda a sexta-feira, entre 08:00 e 20:00, no fuso `America/Sao_Paulo`.
+- O formulário indica imediatamente datas e horários fora do funcionamento e preserva os dados quando o servidor rejeita a solicitação.
+
 ## [1.0.0] - 2026-10-19
 
 ### Adicionado
@@ -25,3 +32,4 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Verificações de formatação, lint, tipos, testes e build na integração contínua.
 
 [1.0.0]: https://github.com/Levyhb/roomly-space/releases/tag/v1.0.0
+[1.0.1]: https://github.com/Levyhb/roomly-space/compare/v1.0.0...v1.0.1

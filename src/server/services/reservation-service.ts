@@ -9,6 +9,8 @@ import {
 import type { CreateReservationInput } from "@/server/schemas/reservations";
 import {
   BOOKING_TIMEZONE,
+  isBusinessDay,
+  isWithinBusinessHours,
   localDateTimeToUtc,
   localDayBounds,
   utcToLocalTime,
@@ -84,6 +86,20 @@ export async function createReservation(
       400,
       "PAST_RESERVATION",
       "O início deve estar no futuro",
+    );
+  }
+  if (!isBusinessDay(input.date)) {
+    throw new ApiError(
+      400,
+      "NON_BUSINESS_DAY",
+      "Reservas são permitidas somente de segunda a sexta-feira",
+    );
+  }
+  if (!isWithinBusinessHours(input.startTime, input.endTime)) {
+    throw new ApiError(
+      400,
+      "OUTSIDE_BUSINESS_HOURS",
+      "Reservas são permitidas somente entre 08:00 e 20:00",
     );
   }
 

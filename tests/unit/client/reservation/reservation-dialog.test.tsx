@@ -37,7 +37,7 @@ function availability(
 
 function fillForm() {
   fireEvent.change(screen.getByLabelText(/Data da reserva/), {
-    target: { value: "2030-10-20" },
+    target: { value: "2030-10-21" },
   });
   fireEvent.change(screen.getByLabelText(/Horário de entrada/), {
     target: { value: "10:00" },
@@ -74,6 +74,11 @@ test("TC_SALA_2_026 - diálogo mostra sala, recursos, data, horários e foco ini
   expect(
     screen.getByRole("heading", { name: "Registrar reserva" }),
   ).toBeVisible();
+  expect(
+    screen.getByText(
+      "Reservas disponíveis de segunda a sexta-feira, das 08:00 às 20:00.",
+    ),
+  ).toBeVisible();
   expect(screen.getByLabelText(/Data da reserva/)).toHaveAttribute(
     "type",
     "date",
@@ -87,13 +92,74 @@ test("TC_SALA_2_026 - diálogo mostra sala, recursos, data, horários e foco ini
   ).toBeVisible();
 });
 
+test("TC_SALA_5_005 - fim de semana deixa a data vermelha e explica o motivo", async () => {
+  render(<ReservationDialog room={room} onClose={jest.fn()} />);
+  const dateInput = screen.getByLabelText(/Data da reserva/);
+  fireEvent.change(dateInput, { target: { value: "2030-10-20" } });
+  expect(dateInput).toHaveAttribute("aria-invalid", "true");
+  expect(
+    screen.getByText(
+      "Reservas são permitidas somente de segunda a sexta-feira.",
+    ),
+  ).toBeVisible();
+
+  fireEvent.change(dateInput, { target: { value: "2030-10-21" } });
+  expect(dateInput).toHaveAttribute("aria-invalid", "false");
+  expect(
+    screen.queryByText(
+      "Reservas são permitidas somente de segunda a sexta-feira.",
+    ),
+  ).not.toBeInTheDocument();
+});
+
+test("TC_SALA_5_006 - horários inválidos mostram erro no campo durante a digitação", async () => {
+  render(<ReservationDialog room={room} onClose={jest.fn()} />);
+  await screen.findByText("Sem horários ocupados nesta data.");
+  const startInput = screen.getByLabelText(/Horário de entrada/);
+  const endInput = screen.getByLabelText(/Horário de saída/);
+
+  fireEvent.change(startInput, { target: { value: "07:59" } });
+  expect(startInput).toHaveAttribute("aria-invalid", "true");
+  expect(
+    screen.getByText("O horário de entrada deve estar entre 08:00 e 20:00."),
+  ).toBeVisible();
+
+  fireEvent.change(startInput, { target: { value: "20:01" } });
+  expect(startInput).toHaveAttribute("aria-invalid", "true");
+  expect(
+    screen.getByText("O horário de entrada deve estar entre 08:00 e 20:00."),
+  ).toBeVisible();
+
+  fireEvent.change(startInput, { target: { value: "19:45" } });
+  fireEvent.change(endInput, { target: { value: "20:01" } });
+  expect(endInput).toHaveAttribute("aria-invalid", "true");
+  expect(
+    screen.getByText("O horário de saída deve estar entre 08:00 e 20:00."),
+  ).toBeVisible();
+
+  fireEvent.change(endInput, { target: { value: "07:59" } });
+  expect(endInput).toHaveAttribute("aria-invalid", "true");
+  expect(
+    screen.getByText("O horário de saída deve estar entre 08:00 e 20:00."),
+  ).toBeVisible();
+
+  fireEvent.change(endInput, { target: { value: "19:30" } });
+  expect(
+    screen.getByText(
+      "O horário de saída deve ser maior que o horário de entrada.",
+    ),
+  ).toBeVisible();
+  fireEvent.change(endInput, { target: { value: "20:00" } });
+  expect(endInput).toHaveAttribute("aria-invalid", "false");
+});
+
 test("TC_SALA_2_027 - loading só na disponibilidade e resposta antiga não substitui data nova", async () => {
   let finishFirst!: (value: ReturnType<typeof availability>) => void;
   let finishSecond!: (value: ReturnType<typeof availability>) => void;
   get.mockImplementation(
     (_: string, config: { params: { date: string } }) =>
       new Promise((resolve) => {
-        if (config.params.date === "2030-10-20") finishSecond = resolve;
+        if (config.params.date === "2030-10-21") finishSecond = resolve;
         else finishFirst = resolve;
       }),
   );
@@ -106,11 +172,11 @@ test("TC_SALA_2_027 - loading só na disponibilidade e resposta antiga não subs
   ).toBeVisible();
 
   fireEvent.change(screen.getByLabelText(/Data da reserva/), {
-    target: { value: "2030-10-20" },
+    target: { value: "2030-10-21" },
   });
   await act(async () =>
     finishSecond(
-      availability("2030-10-20", [{ startTime: "14:00", endTime: "15:00" }]),
+      availability("2030-10-21", [{ startTime: "14:00", endTime: "15:00" }]),
     ),
   );
   expect(await screen.findByText("14:00–15:00")).toBeVisible();
@@ -260,10 +326,41 @@ test("TC_SALA_2_030 - conflito 409 preserva dados e atualiza disponibilidade", a
     expect(
       get.mock.calls.filter(
         ([url, config]) =>
-          url.includes("/availability") && config.params.date === "2030-10-20",
+          url.includes("/availability") && config.params.date === "2030-10-21",
       ).length,
     ).toBeGreaterThanOrEqual(2),
   );
+});
+
+test("TC_SALA_5_007 - erro 400 preserva o formulário e mostra a regra do servidor", async () => {
+  post.mockRejectedValueOnce(
+    Object.assign(new Error("outside business hours"), {
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: {
+          error: {
+            message: "Reservas são permitidas somente entre 08:00 e 20:00",
+          },
+        },
+      },
+    }),
+  );
+  render(<ReservationDialog room={room} onClose={jest.fn()} />);
+  fillForm();
+  await screen.findByText("Sem horários ocupados nesta data.");
+  await userEvent
+    .setup()
+    .click(screen.getByRole("button", { name: "Confirmar reserva" }));
+
+  await waitFor(() =>
+    expect(toastError).toHaveBeenCalledWith(
+      "Reservas são permitidas somente entre 08:00 e 20:00",
+    ),
+  );
+  expect(screen.getByLabelText(/Data da reserva/)).toHaveValue("2030-10-21");
+  expect(screen.getByLabelText(/Horário de entrada/)).toHaveValue("10:00");
+  expect(screen.getByLabelText(/Horário de saída/)).toHaveValue("11:00");
 });
 
 test("TC_SALA_2_031 - confirmação usa payload esperado, loading e fecha com toast", async () => {
@@ -282,7 +379,7 @@ test("TC_SALA_2_031 - confirmação usa payload esperado, loading e fecha com to
     .click(screen.getByRole("button", { name: "Confirmar reserva" }));
   expect(post).toHaveBeenCalledWith("/reservations", {
     roomId: 1,
-    date: "2030-10-20",
+    date: "2030-10-21",
     startTime: "10:00",
     endTime: "11:00",
   });

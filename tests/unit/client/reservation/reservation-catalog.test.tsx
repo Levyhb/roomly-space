@@ -66,7 +66,7 @@ test("TC_SALA_2_034 - sem sessão orienta Entrar como e não abre formulário", 
       return Promise.resolve({
         data: {
           roomId: 1,
-          date: "2030-10-20",
+          date: "2030-10-21",
           timezone: "America/Sao_Paulo",
           unavailable: [],
         },
@@ -169,7 +169,7 @@ test("TC_SALA_2_036 - sucesso fecha e reabrir inicia formulário limpo", async (
   await userEvent.setup().click(reserve);
   await screen.findByRole("dialog", { name: "Reservar sala" });
   fireEvent.change(screen.getByLabelText(/Data da reserva/), {
-    target: { value: "2030-10-20" },
+    target: { value: "2030-10-21" },
   });
   fireEvent.change(screen.getByLabelText(/Horário de entrada/), {
     target: { value: "10:00" },

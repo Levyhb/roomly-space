@@ -21,6 +21,20 @@ export function saoPauloNow(now = new Date()): { date: string; time: string } {
   };
 }
 
+function isValidBookingDate(date: string): boolean {
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+    !Number.isNaN(Date.parse(`${date}T00:00:00Z`)) &&
+    new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date
+  );
+}
+
+export function isBookingBusinessDay(date: string): boolean {
+  if (!isValidBookingDate(date)) return false;
+  const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
+  return weekday >= 1 && weekday <= 5;
+}
+
 export function bookingDurationMinutes(
   startTime: string,
   endTime: string,
@@ -44,17 +58,18 @@ export function bookingFormError(
   maxDurationMinutes: number,
   now = new Date(),
 ): string | null {
-  if (
-    !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
-    Number.isNaN(Date.parse(`${date}T00:00:00Z`)) ||
-    new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date
-  ) {
+  if (!isValidBookingDate(date)) {
     return "Escolha uma data válida.";
+  }
+  if (!isBookingBusinessDay(date)) {
+    return "Reservas são permitidas somente de segunda a sexta-feira.";
   }
   const duration = bookingDurationMinutes(startTime, endTime);
   if (duration === null) return "Informe entrada e saída em HH:mm.";
   if (duration <= 0)
     return "O horário de saída deve ser maior que o horário de entrada.";
+  if (startTime < "08:00" || endTime > "20:00")
+    return "Reservas são permitidas somente entre 08:00 e 20:00.";
   if (duration < 15) return "A duração mínima é de 15 minutos.";
   if (duration > maxDurationMinutes)
     return `A duração máxima desta sala é de ${maxDurationMinutes} minutos.`;

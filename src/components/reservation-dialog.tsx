@@ -70,6 +70,10 @@ export function ReservationDialog({
   const availabilityError = !availabilityLoading && availabilityResult?.error;
   const requestId = useRef(0);
   const duration = bookingDurationMinutes(startTime, endTime);
+  const endTimeError =
+    duration !== null && duration <= 0
+      ? "O horário de saída deve ser maior que o horário de entrada."
+      : null;
 
   useEffect(() => {
     if (!date) return;
@@ -111,6 +115,7 @@ export function ReservationDialog({
       startTime,
       endTime,
       availability?.unavailable ?? [],
+      room.maxReservationDurationMinutes,
     );
     if (message) {
       setFormError(message);
@@ -131,6 +136,16 @@ export function ReservationDialog({
       if (axios.isAxiosError(error) && error.response?.status === 409) {
         toast.error("Horário indisponível. Escolha outro intervalo.");
         setAvailabilityRetry((value) => value + 1);
+      } else if (axios.isAxiosError(error) && error.response?.status === 400) {
+        const responseData = error.response.data as {
+          error?: { message?: unknown };
+        };
+        const message = responseData.error?.message;
+        toast.error(
+          typeof message === "string"
+            ? message
+            : "A reserva não atende às regras da sala.",
+        );
       } else if (axios.isAxiosError(error) && error.response?.status === 401) {
         toast.error("Sessão encerrada. Entre como um usuário para reservar.");
       } else {
@@ -354,6 +369,8 @@ export function ReservationDialog({
                   setEndTime(event.target.value);
                   setFormError(null);
                 }}
+                error={Boolean(endTimeError)}
+                helperText={endTimeError}
                 slotProps={{
                   inputLabel: { shrink: true },
                   htmlInput: { step: 60 },
@@ -363,7 +380,8 @@ export function ReservationDialog({
               />
             </Box>
             <Typography variant="caption" color="text.secondary">
-              Duração permitida: 15 minutos a 4 horas.
+              Duração permitida: de 15 a {room.maxReservationDurationMinutes}{" "}
+              minutos.
               <span style={{ color: "var(--color-accent)" }}>
                 {duration !== null && duration > 0
                   ? ` Selecionada: ${duration} minutos.`

@@ -65,6 +65,13 @@ export async function createReservation(
   }
 
   const minutes = (endsAt.getTime() - startsAt.getTime()) / 60_000;
+  if (minutes <= 0) {
+    throw new ApiError(
+      400,
+      "INVALID_DURATION",
+      "O horário de saída deve ser maior que o horário de entrada",
+    );
+  }
   if (minutes < 15) {
     throw new ApiError(
       400,

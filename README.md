@@ -4,7 +4,7 @@ Sistema interno de reserva de salas de reunião desenvolvido para o desafio téc
 
 ## Estado do projeto
 
-A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo. A SALA-3 acrescenta a tela para consultar e cancelar apenas as próprias reservas. A SALA-4 acrescenta a API e a interface para administração de salas. A SALA-6 substitui o limite fixo de quatro horas por uma duração máxima configurável em cada sala.
+A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo. A SALA-3 acrescenta a tela para consultar e cancelar apenas as próprias reservas. A SALA-4 acrescenta a API e a interface para administração de salas. A SALA-5 restringe as reservas aos dias úteis, das 08:00 às 20:00. A SALA-6 substitui o limite fixo de quatro horas por uma duração máxima configurável em cada sala.
 
 ## Escopo previsto
 
@@ -129,7 +129,7 @@ Reservas têm usuário, sala, início, fim e instante opcional de cancelamento. 
 
 O hotfix SALA-5 partiu de `main` na versão 1.0.0, onde a duração máxima ainda era fixa em quatro horas. Enquanto isso, a SALA-6 já estava em `develop` e substituía esse valor pelo limite configurado em cada sala. Ao retornar o hotfix para `develop`, foram mantidas as duas regras: a reserva deve durar no mínimo 15 minutos, respeitar o máximo da sala, ocorrer de segunda a sexta-feira e permanecer entre 08:00 e 20:00.
 
-Os conflitos em `reservation-form-utils` e no diálogo de reserva foram resolvidos preservando o parâmetro `maxReservationDurationMinutes` da SALA-6 e as validações visuais e de horário da SALA-5. Os testes conflitantes passaram a fornecer o limite da sala e usam datas futuras em dias úteis. README e CHANGELOG mantêm tanto o registro do hotfix 1.0.1 quanto a funcionalidade que será publicada na versão 1.1.0. O serviço do servidor também foi conferido para garantir que ele aplique o horário de funcionamento antes de comparar a duração com o limite da sala.
+Os conflitos em `reservation-form-utils` e no diálogo de reserva foram resolvidos preservando o parâmetro `maxReservationDurationMinutes` da SALA-6 e as validações visuais e de horário da SALA-5. Os testes conflitantes passaram a fornecer o limite da sala e usam datas futuras em dias úteis. README e CHANGELOG mantêm tanto o registro do hotfix 1.0.1 quanto a funcionalidade publicada na versão 1.1.0. O serviço do servidor também foi conferido para garantir que ele aplique o horário de funcionamento antes de comparar a duração com o limite da sala.
 
 ## Limites e pendências
 

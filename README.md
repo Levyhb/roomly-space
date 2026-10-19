@@ -15,7 +15,7 @@ A base Next.js, as verificações de lint e formatação, o banco SQLite, a sess
 - Duração máxima configurável por sala (SALA-6).
 - Reservas apenas em dias úteis, das 08h às 20h (hotfix SALA-5).
 
-## Como rodar a base atual
+## Como executar a aplicação
 
 Requer Node.js 24.19.0 (registrado em `.nvmrc`) e npm. Na raiz do projeto:
 
@@ -57,17 +57,17 @@ A página `/admin` verifica a role no servidor e redireciona visitantes e usuár
 
 Por padrão, o banco de desenvolvimento é `development.sqlite` e o de testes é `test.sqlite`, ambos na raiz e ignorados pelo Git. Os caminhos podem ser alterados por `DB_STORAGE_DEVELOPMENT` e `DB_STORAGE_TEST` (ver `.env.example`). Para executar os comandos individuais do banco no ambiente de teste, acrescente `-- --env test` a `db:migrate` e `db:seed`. Para usar `db:setup` no ambiente de teste, defina `NODE_ENV=test` no terminal antes de executá-lo. O Sequelize CLI lê as variáveis do processo; se usar caminhos personalizados, defina essas variáveis no terminal antes de executar os comandos.
 
-Para verificar a base atual, execute `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test` e `npm run build`. Os comandos `npm run lint:fix` e `npm run format` aplicam correções locais antes de uma nova verificação.
+Para verificar a aplicação, execute `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test` e `npm run build`. Os comandos `npm run lint:fix` e `npm run format` aplicam correções locais antes de uma nova verificação.
 
 O Prettier aceita o fim de linha nativo do arquivo (`LF` ou `CRLF`) para que a verificação funcione no checkout Windows e no CI Linux sem alterar arquivos não relacionados.
 
-Os testes unitários de componentes e código executado no navegador ficam em `tests/unit/client`; regras e módulos do servidor ficam em `tests/unit/server`. Quando uma funcionalidade possuir vários arquivos de teste, eles serão agrupados em uma subpasta com o nome do domínio, como `tests/unit/server/reservation`. Os cenários são documentados em `tests/scenarios`, e os helpers reutilizáveis ficam em `tests/helpers`. O Jest usa ambiente Node por padrão e `jsdom` apenas nos testes de componentes. Os testes permanecem isolados e podem ser executados em paralelo pelo Jest, permitindo que a suíte cresça sem impor execução sequencial. O setup cobre autorização da sessão e troca de usuário na interface com repository, cookie e HTTP simulados, sem acessar SQLite. `npm run test:watch` executa os testes durante o desenvolvimento e `npm run test:coverage` gera o relatório de cobertura. As regras dos cards receberão testes próprios ao serem implementadas.
+Os testes unitários de componentes e código executado no navegador ficam em `tests/unit/client`; regras e módulos do servidor ficam em `tests/unit/server`. Quando uma funcionalidade possui vários arquivos de teste, eles são agrupados em uma subpasta com o nome do domínio, como `tests/unit/server/reservation` e `tests/unit/client/room`. Os cenários são documentados em `tests/scenarios`, e os helpers reutilizáveis ficam em `tests/helpers`. O Jest usa ambiente Node por padrão e `jsdom` apenas nos testes de componentes. Os testes permanecem isolados e podem ser executados em paralelo pelo Jest, permitindo que a suíte cresça sem impor execução sequencial. O setup cobre autorização da sessão e troca de usuário na interface com repository, cookie e HTTP simulados, sem acessar SQLite. `npm run test:watch` executa os testes durante o desenvolvimento e `npm run test:coverage` gera o relatório de cobertura.
 
 ## Integração contínua
 
 O workflow `.github/workflows/ci.yml` roda em pull requests para `develop` e `main`, com permissão apenas de leitura no repositório. Usa Node 24 conforme `.nvmrc`, cache npm e `npm ci`. Prepara migrations e seed em um SQLite temporário com `NODE_ENV=test`, depois executa formatação, lint, typecheck, `npm test` e build. O template de PR pede o quê mudou, por quê e como testar.
 
-Após a primeira execução verde no PR de setup, configurar uma [ruleset de branches no GitHub](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository) para `develop` e `main` com exigência de pull request e do status `Verify` da CI antes do merge. A configuração remota e a execução do workflow ainda estão pendentes; os comandos locais validam apenas o conteúdo deste checkout.
+O workflow já é executado nos pull requests. A [ruleset de branches no GitHub](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository) deve proteger `develop` e `main`, exigindo pull request e o status `Verify` da CI antes do merge. Essa configuração remota deve ser conferida diretamente no repositório; os comandos locais validam apenas o conteúdo deste checkout.
 
 ## Decisões técnicas
 
@@ -123,7 +123,7 @@ Reservas têm usuário, sala, início, fim e instante opcional de cancelamento; 
 
 ## Fluxo de entrega
 
-`main` representa produção e `develop` integra as funcionalidades. O commit inicial foi criado em `main` para inicializar o repositório; `develop` e `feature/SALA-0-setup` foram criadas a partir dele. As próximas mudanças serão propostas por pull request, com descrição do que mudou, por que mudou e como testar. Os commits seguem Conventional Commits.
+`main` representa produção e `develop` integra as funcionalidades. O commit inicial foi criado em `main` para inicializar o repositório; `develop` e `feature/SALA-0-setup` foram criadas a partir dele. As mudanças são propostas por pull request, com descrição do que mudou, por que mudou e como testar. Os commits seguem Conventional Commits. Releases partem de `develop` em `release/<versão>`, são integradas em `main`, recebem uma tag `v<versão>` e depois são mescladas de volta em `develop`.
 
 ## Limites e pendências
 

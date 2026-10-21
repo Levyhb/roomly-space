@@ -2,18 +2,13 @@
 
 Sistema interno de reserva de salas de reunião desenvolvido para o desafio técnico Full Stack Pleno da Sensedia.
 
-## Estado do projeto
+## Funcionalidades entregues
 
-A base Next.js, as verificações de lint e formatação, o banco SQLite, a sessão simulada por cookie, os testes unitários e o workflow de CI foram configurados. A SALA-1 possui catálogo responsivo com filtros na URL. A SALA-2 acrescenta disponibilidade pública, criação de reservas validada no servidor e um modal responsivo para reservar no catálogo. A SALA-3 acrescenta a tela para consultar e cancelar apenas as próprias reservas. A SALA-4 acrescenta a API e a interface para administração de salas. A SALA-5 restringe as reservas aos dias úteis, das 08:00 às 20:00. A SALA-6 substitui o limite fixo de quatro horas por uma duração máxima configurável em cada sala.
-
-## Escopo previsto
-
-- Listagem de salas com filtros na URL por capacidade e recurso.
-- Reserva com validação no servidor de sobreposição, data futura e duração permitida.
-- Listagem e cancelamento das próprias reservas.
-- Cadastro e edição de salas com autorização de administrador no servidor.
-- Duração máxima configurável por sala (SALA-6).
-- Reservas apenas em dias úteis, das 08h às 20h (hotfix SALA-5).
+- Catálogo responsivo de salas com busca, filtros e paginação na URL.
+- Reserva com consulta de disponibilidade e validação no servidor de data futura, sobreposição, duração e funcionamento de segunda a sexta-feira, das 08:00 às 20:00.
+- Consulta e cancelamento das próprias reservas.
+- Cadastro e edição de salas por administradores, incluindo recursos e duração máxima configurável por sala.
+- Sessão simulada com usuários do seed, migrations, testes unitários e verificações de CI.
 
 ## Como executar a aplicação
 
